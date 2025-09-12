@@ -1,3 +1,6 @@
+# local symbolic link to bin/qmk
+/qmk
+
 # Junk files
 *.bak
 *.swp
