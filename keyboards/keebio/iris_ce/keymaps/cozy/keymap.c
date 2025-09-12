@@ -118,7 +118,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_SLSH,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
             KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,   MC_WINT, KC_J   , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
-                                             KC_LALT, L2_DEL ,   KC_SPC , L2_ENT , KC_E, KC_RCTL
+                                  KC_LALT, L2_DEL , KC_SPC ,       KC_E, L2_ENT , KC_RCTL
         ),
     // Current accents: äöü ß é çñ. Current extras: £. We might move some characters from the AltGr layer here.
     // Especially the software combining accents from US ext. intl. ...
@@ -128,7 +128,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, MX_FUER, KC_TRNS,                     US_SS  , KC_TRNS, US_UDIA, US_ODIA, KC_TRNS, KC_TRNS,
             KC_TRNS, US_ADIA, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                     KC_TRNS, US_NTIL, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
             KC_TRNS, KC_TRNS, KC_TRNS, US_CCED, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-                                                KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, US_EACU, KC_TRNS
+                                                KC_TRNS, KC_TRNS, KC_TRNS,   US_EACU, KC_TRNS, KC_TRNS
         ),
     // alternate character and navigation layer
     // MX_TILD here is the 'live' key for programmers.
@@ -138,7 +138,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, MX_FUER,                       MX_BTIC, KC_BSLS, KC_LCBR, KC_RCBR, KC_NO  , KC_NO  ,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_TILD, US_MICR, KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_TRNS, KC_TOP , KC_PGUP, KC_PGDN, KC_BOTT, KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
-                                                KC_LALT, KC_BSPC, KC_ENT ,     KC_SPC , KC_NO  , KC_RCTL
+                                                KC_LALT, KC_BSPC, KC_ENT ,     KC_NO  ,KC_SPC ,  KC_RCTL
         ),
     // function layer, like on a laptop.
     [L_FN] = LAYOUT(
@@ -146,7 +146,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , MX_TQM ,                       KC_NO  , RM_TOGG, RM_HUED, RM_SATD, RM_VALD, QK_BOOT,
             OSM_SFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       KC_NO  , RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, OSM_SFT,
 			OSM_CTL, KC_NO, KC_NO, C(KC_PGUP), C(KC_PGDN), KC_NO, KC_LGUI,     KC_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
-                                                 OSM_ALT , KC_NO, KC_NO  ,     OSM_AGR, KC_NO  , OSM_CTL
+                                                 OSM_ALT , OSM_AGR, KC_NO,     KC_NO  , OSM_AGR, OSM_CTL
         )
 };
 
