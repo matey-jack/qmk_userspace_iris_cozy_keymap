@@ -1,5 +1,23 @@
 # QMK Userspace for The Cozy Keymap on the Iris CE split keyboard
 
+This keymap is a child of three different parents:
+ - US ANSI
+ - German Qwertz
+ - The wide hand mapping for ANSI and ISO keyboards which originated first as a Colemak mod.
+
+The keymap assumes that your computer is running the "US extended international" layout. It works on US ANSI as well, but then of course, all the non-English letters and some other characters are missing! (Details below.)
+
+The US / German mix is mostly reflected in the distribution of punctuation characters, 
+while the wide hand mapping brings the concept of typing a letter (here E) with the right thumb (and indirectly als Shift on the edge of the home row).
+
+What makes this keymap special is that I have already typed with a "software split" (aka "wide") keymap on the traditional ANSI layout for many years, 
+and the finger movement for this physical split keyboard is very similar to the wide ANSI keymap that can be used on any dumb keyboard, even laptops. 
+(See [Github: gemütliche Tastatur](https://github.com/matey-jack/gemuetliche-tastatur), 
+although that needs to be updated to sync better with the new physical split keyboard.)
+
+So while this Iris keymap is very compatible with the ANSI / ISO fingerings, those fingerings match the wide mod, which is not always the traditional one.
+
+
 ![Iris CE with MBK Glow key caps reflecting this key map as closely as the caps allow](<Iris CE with Cozy Keyboard mapping 2025-09.jpg>)
 
 [Google Sheet with the exact keymapping (at some point in time)](https://docs.google.com/spreadsheets/d/1JkIiKLAgzVKIijrSS0zbML-NLrd7E52zQ_xwXzjz3oQ/edit?usp=sharing)
@@ -12,21 +30,53 @@ Many keys are in the same (relative) position as on a traditional keyboard:
  - On the left edge we have Escape, Tab, Shift, Ctrl in the traditional order. 
    Since Alt is also in the traditional position Alt+Tab remains the same gesture.
  - Both Shift keys are on the home row to avoid diagonal moves during text-typing flow. 
+   (This might be the biggest change compared to the ANSI layout, but on my ANSI wide mapping I also have it setup like this. )
  - On the right, we have Backspace still in the traditional position. 
    Right Ctrl and Fn swap places, since I don't have strong muscle memory for those keys and the new positions make for easier combos.
+ - The remaining modifiers (Alt, Windows/Command, right Ctrl) are on thumb keys.
 
-Layers:
+Thumb keys:
+ - Space is obviously on the thumb, but also E – which is inherited from the ANSI wide keymap which makes the key just right of space into an actual home key for the right thumb. When typing prose (normal English or German texts) the thumbs will not move sideways, but only press down on the keys they are on. (That's why Shift is not on a thumb key! It would lead to same-finger bigrams.)
+ - Out of Iris' four thumb keys on each side, only one more is easy to reach. I put (forward) Delete on one of them and Enter on the other. This is the biggest change from the ANSI wide actually, and I find it both very practical and easy to get used to. 
+
+Punctuation and Shift mappings:
+ - The ANSI keyboard has 11 punctuation (and accent) keys and 10 more punctuation characters on the Shift+number keys.
+ - This keymap has 6 punctuation keys, of which one is actually a one-shot layer activator which behaves like a combining accent key. (For that latter, see below.)
+ - I put a lot of thought in choosing the 20 punctuation characters to map to the base and shift layers of those keys (10 on Shift+number, 2×5 on the pure punctuation keys). This allows to write normal text as easily as possible and still find most of the punctuation in a familiar place (either from US ANSI, German Qwertz, or Cozy special.)
+ - In particular, the Shift mapping on numbers 1..5 and 7..8 follows US ANSI, which is also making nice use of the shie-through keycaps that are only available with those US labels.
+ - The US `+=` key is split onto the Shift+6 and Shift+9 positions, so that the two characters stay in the number row. `=` in particular is on the roughly same position as on the German standard board. 
+ - `?` is retained in its German position, which is a great analog to the (US and German) position of `!`.
+ - The bottom row triplet `,.-` is exactly as in the German standard, nicely carrying `;:_` on the Shift mapping, which is both logical and comfortable, and let's us dispose with the `;:` key of US ANSI. The Shift labels `,<` and `.>` are still correct, though, because `<` and `>` are mapped to these keys on the AltGr layer (see "stack of parentheses" below).
+ - A big thank you goes to Pascal  Getreuer for his "custom_shift_keys" module which makes all this possible and I think is an essential tool to help non-American users making good keymaps for their language!
+ - The apostrophe/quote key is the standard US shift-pairing, but as a key moves to the left hand to avoid bigram conflicts with the letter T. I recommend to swap this back to the right edge for anyone using a different letter mapping (like Colemak, Qwerty, or other).
+ - The `/` ends up on the top right, just because that spot is free. For anyone used to a US ANSI keyboard, I recommend simply swapping its position with the `-_` key.
+
+QMK Layers:
  - There is an AltGr layer and a Fn layer which mimic a bit the AltGr layer from traditional keyboard layouts (only with more characters mapped on it) and the Fn layer from laptop and other small keyboards.
  - For reasons of my personal keyboard history (not having an Fn layer for many years, and the AltGr layer toggle in a much easier to reach spot), nav keys are on the AltGr layer.
  - Both layers have at least one layer activation key on each half of the keyboard. 
  - AltGr behaves much like the legacy AltGr key, but is in fact a pure firmware layer. Thus it can also modify the behavior of non-character keys. 
- - Each thumb has two keys that are most easy to reach. Those are mapped to Delete/AltGr and Space on the left and Enter/AltGr and E on the right. 
-   I find that tap/hold in those combinations works on much better than with letters which are often rolled.
- - Fn has non-symmetric positions on both halves. On the left tap/hold with Escape is a great position to hit Function-keys. 
+ - AltGr is activated symmetrically with the secondary thumb keys (Delete and Enter) as a tap/hold. 
+   I find that tap/hold in those combinations is quite resilient against various typing styles. Tap/hold on letters that are typed fast and ofte overlap with other letters does not work for me.
+ - The Fn activator has non-symmetric positions on both halves. On the left tap/hold with Escape is a great position to hit Function-keys. 
    On the right, bottom row tap/hold with the rarely used Insert key, it's great for volume control, which is placed on the < and > keys. 
  - AltGr also swaps the function of Space and Enter as well as Backward delete and Forward delete. 
    This let's me do more editing and confirming dialogs with the left hand while the right is on the mouse. 
    (You might not need this on a one-piece keyboard, but on a split, the other side of the board is further away!)
+ - Since I use the AltGr layer a lot I have secondary activation keys for it that are not on the thumbs. It's great for one-handed usage, especially with nav keys that are used when not in typing flow.
+
+One-shot layer / combining accents:
+ -  - German has four more letters than English: äöü and ß. Placing them on the Iris keyboard was the hardest task of all. On the Ergodox, which has many more keys, it was easy to shift punctuation around to keep the German letters äöü in a similar position to German ISO keyboard, but the Iris is just missing two keys. I have tried various positions for those letters: first on the AltGr layer, but that requires too much coordination of two key presses while typing; then on tap/hold keys (with Ctrl and Fn in the bottom corners and the third letter where the accent key currently sits), but that leads to typos and also those bottom corner diagonal positions are not ergonomic to reach.
+ - My favorite solution turned out to use the "diaeresis combining accent" key from the US ext. int. layout. This allows typing two keys in sequence which is exactly what our fingers do when tying words really fast. And it's resilient towards rolling (press/release overlaps), which makes it both fast and comfortable. From this experience came the idea to use the combining accent key for more than three letters and thus I created a separate layer which simulates the diaresis combining accent when used with a, o, and u, and then does a lot of other useful stuff, too.
+ - Since this concept is the newest in my keymap (2025-Sept), I expect a few more tweaks and changes coming in the next couple of weeks.
+ - For one thing, I want to make good use of the one-shot activation of this layer (as opposed to the hold+press activation of the AltGr layer which mimics standard Shift and AltGr behavior) and use it for characters that fit well into a typing flow. It wouldn't make sense to add anything on this layer which is often pressed with another key on the same layer. (For example, I can input `<=` by holding AltGr while pressing `<` and `=`, whereas the one-shot modifier would have to pressed for each character again.)
+
+"Stack of parentheses" on the AltGr layer:
+ - This one has long tradition on my dumb keyboard software layouts. It uses the same fingers for all four kinds of parentheses. 
+   And those are also the longest fingers and the same fingers that German standard uses for `()` and `{}` and US ANSI uses for `<>`. 
+   This is just awesome and in all the rearrangements that I made for the AltGr layer over time, the stack of parentheses has always stood firm.
+ - Other characters mostly sit in mnemonic positions like `|` on the `&` key (both play symmtric roles in programming languages) and `€` on `$`.
+ - The AltGr layer also has some alternate positions for punctuation keys to make certain bigrams typeable without having to switch between AltGr and Shift. Those are `);` placed next to each other, for the convenience of C-like programming languages; and `=` placed next to `<` and `>`.
 
 Modifiers:
  - Legacy modifier keys (Shift, Ctrl, Alt, Win) are not tap/hold to fully preserve their combined functions with mouse gestures (like Shift+Click for select, Ctrl+Scroll for Zoom, and similar).
@@ -36,11 +86,6 @@ Modifiers:
  - It's easy to press Ctrl+Shift (on the left side) with just one finger (pinky stretched out) which is used in some software combos. 
  - The same is true for AltGr+Win (aka Nav+Win) on the right hand which is good to press arrow keys on the left hand for some combos. 
    When moving the right hand a bit, it can also easily hold Ctrl+Win+Nav for some other arrow key combos on the other hand.
-
-Firmware combining accents:
- - German has four more letters than English: äöü and ß. I tried many ways to include them on the board (tap/hold, AltGr layer, separate layer, and finally using the US ext. intl. combining diaeresis accent). 
- - I found the combining accent (aka dead key) was the best solution of those and realized that implementing it in Firmware would be even better: I can configure additional combinations without changing the software layout. I can also set it such that entering a non-existing combo will not create a stray accent (without letter) in the text.
- - Since the combining accent is implemented as a plain one-shot layer, I put a few more characters on that layer, especially various other accents, making sure that there is a memorable distinction between this layer and AltGr and that use-case for those additional characters fit the one-shot (prefix key) activation pattern
 
  I can't emphasize enough how useful the number row is on a keyboard: not only can I reuse muscle memory from traditional keyboards, 
  but I can also look at the keycaps which directly show base and shift layer characters and indirectly show the number of the function key
