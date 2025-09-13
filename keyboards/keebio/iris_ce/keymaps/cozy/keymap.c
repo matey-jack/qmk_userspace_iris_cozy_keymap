@@ -35,10 +35,15 @@ enum custom_keycodes {
     MX_ACUT,
     MX_DQUO,
     // KC_GRV aka US_DGRV works same on both devices, it produces a dead grave.
-    // Those are not device-dependent, but to save typing effort.
+
+    // The following are not device-dependent, but to save typing effort.
     MX_BTIC,  // "live" grave accent, doubling as "backtick" in programming.
     MX_TILD,  // "live" tilde for the Unix Shell...
     MX_FUER,  // Avoids same-finger trigram (f¨ur)
+
+    // We could do the following two with Unicode, but someone said that Unicode is less reliable...
+    MX_EGRV,
+    MX_AGRV,
 };
 
 enum quote_mode {
@@ -107,6 +112,8 @@ int current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Only tested and enabled on Windows (see config.h).
 #define UC_PMIL UC(0x2030) // per mille sign
 #define UC_NDSH UC(0x2013) // en-dash
+#define UC_oe   UC(0x0153) // œ - don't ask me why US ext. intl. has æ, but not œ! Pourtant ils aiment manger le bœf!
+#define UC_OE   UC(0x0152) // Œ
 
 /*
     Comment for visually separating the actual keymap.
@@ -115,28 +122,26 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // standard keyboard layer
     [L_BASE] = LAYOUT(
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
-            KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_SLSH,
+            KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_EQL ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
             KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,   MC_WINT, KC_J   , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
                                   KC_LALT, L2_DEL , KC_SPC ,       KC_E, L2_ENT , KC_RCTL
         ),
-    // Current accents: äöü ß é çñ. Current extras: £. We might move some characters from the AltGr layer here.
-    // Especially the software combining accents from US ext. intl. ...
-    // Note the Pound sign is on the pound key instead of Dollar, to avoid the finger conflict with the layer toggle. The pun, thus, is accidental. :-)
+    // Current accented letters: äöü ß àèé çñ.
+    // Current extras: µ.
     [L_COMBINE] = LAYOUT(
-            KC_TRNS, KC_TRNS, KC_TRNS, US_PND , KC_TRNS, KC_TRNS,                     KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-            KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, MX_FUER, KC_TRNS,                     US_SS  , KC_TRNS, US_UDIA, US_ODIA, KC_TRNS, KC_TRNS,
-            KC_TRNS, US_ADIA, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,                     KC_TRNS, US_NTIL, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-            KC_TRNS, KC_TRNS, KC_TRNS, US_CCED, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-                                                KC_TRNS, KC_TRNS, KC_TRNS,   US_EACU, KC_TRNS, KC_TRNS
+            KC_TRNS, US_QRTR, US_HALF, US_TQTR, KC_TRNS, KC_TRNS,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, KC_TRNS,
+            KC_TRNS, US_AE  , KC_TRNS, KC_TRNS, MX_FUER, KC_TRNS,                     US_SS  , KC_TRNS, US_UDIA, US_ODIA, KC_TRNS, KC_TRNS,
+            KC_TRNS, US_ADIA, MX_AGRV, KC_TRNS, KC_TRNS, KC_TRNS,                     KC_TRNS, US_NTIL, KC_TRNS, UC_oe  , US_OSTR, KC_TRNS,
+            KC_TRNS, US_MICR, KC_TRNS, US_CCED, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
+                                                KC_TRNS, KC_TRNS, KC_TRNS,   US_EACU, MX_EGRV, KC_TRNS
         ),
     // alternate character and navigation layer
-    // MX_TILD here is the 'live' key for programmers.
-    // Dead tilde for accents can be obtained with Shift+US_DGRV aka AltGr+Shift+1.
+    // MX_BTIC and MX_TILD here are the 'live' key for programmers.
     [L_ALTGR] = LAYOUT(
-            KC_NO  , US_DGRV, MX_ACUT, US_CENT, US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
-            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, MX_FUER,                       MX_BTIC, KC_BSLS, KC_LCBR, KC_RCBR, KC_NO  , KC_NO  ,
-            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_TILD, US_MICR, KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
+            KC_NO  , US_SECT, US_CENT, US_PND , US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, MX_TILD, KC_DEL ,
+            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, MX_FUER,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, KC_NO  ,
+            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_TRNS, KC_TOP , KC_PGUP, KC_PGDN, KC_BOTT, KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_BSPC, KC_ENT ,     KC_NO  ,KC_SPC ,  KC_RCTL
         ),
@@ -151,13 +156,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 const custom_shift_key_t custom_shift_keys[] = {
-  {KC_6   , KC_PLUS}, // Shift 6 is +
-  {KC_9   , KC_EQL }, // Shift 9 is =
+  // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
+  {KC_9   , KC_SLSH}, // Shift 9 is /
   {KC_0   , KC_QUES}, // Shift 0 is ?
-  {KC_SLSH, US_SS  }, // Shift / is ß
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
-  {US_DIAE, US_DCIR}, // Shift ¨ is ^
+  // let's see if this works:
+  {UC_oe  , UC_OE},   // Shift œ is Œ
 };
 
 // 3 ms still had some dropped letters.
@@ -245,6 +250,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (!record->event.pressed) return false;
             tap_code16(US_DTIL); // implicit Shift
             tap_code(KC_SPACE);
+            return false;
+        case MX_EGRV:
+            if (!record->event.pressed) return false;
+            // TODO: handle the Shift case, because is currently transforms DGRV into DTIL!
+            // OTOH, the capital version of this is almost never used, and can be made with the explicit accent key anyway.
+            tap_code(US_DGRV);
+            tap_code(KC_E);
+            return false;
+        case MX_AGRV:
+            if (!record->event.pressed) return false;
+            // TODO: handle the Shift case, because is currently transforms DGRV into DTIL!
+            // OTOH, the capital version of this is almost never used, and can be made with the explicit accent key anyway.
+            tap_code(US_DGRV);
+            tap_code(KC_A);
             return false;
         case MX_VERS:
             if (record->event.pressed) {
