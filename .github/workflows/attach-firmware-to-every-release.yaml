@@ -1,9 +1,23 @@
+name: Attach Firmware to new Release
+
 on:
     release:
-        types: [published]
+        types: [published]      # real publish
+    workflow_dispatch:          # manual test
+        inputs:
+            tag:
+                description: "Tag to build (e.g. v10.1). Leave empty to use the run's ref."
+                required: false
+                type: string
+
 permissions:
-    contents: write
-    actions: read   # to read artifacts from other runs
+    contents: write  # to add something to the release?
+    # actions: read   # to read artifacts from other runs
+
+env:
+    TAG: ${{ github.event_name == 'release' && github.event.release.tag_name
+        || inputs.tag
+        || (github.ref_type == 'tag' && github.ref_name) }}
 
 jobs:
     build:
@@ -11,9 +25,10 @@ jobs:
         uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
         with:
             qmk_repo: qmk/qmk_firmware
-            qmk_ref: refs/tags/${{ github.event.release.tag_name }}
+            qmk_ref: master
 
     attach-firmware-to-release:
+        needs: build
         runs-on: ubuntu-latest
         steps:
         - name: Download binaries
@@ -25,4 +40,4 @@ jobs:
         - name: Upload to the release
           env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: gh release upload "${{ github.event.release.tag_name }}" keebio_iris_ce_rev1_cozy.uf2
+          run: gh release upload "${{ env.TAG }}" keebio_iris_ce_rev1_cozy.uf2
