@@ -161,8 +161,8 @@ const custom_shift_key_t custom_shift_keys[] = {
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
-  // let's see if this works:
-  {UC_oe  , UC_OE},   // Shift œ is Œ
+  // TODO: this doesn't work: it seems to send "arrow up" instead.
+  {UC_oe  , UC_OE},   // Shift œ should be Œ
 };
 
 // 3 ms still had some dropped letters.

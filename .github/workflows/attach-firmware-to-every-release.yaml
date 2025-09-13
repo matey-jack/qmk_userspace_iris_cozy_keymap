@@ -1,0 +1,28 @@
+on:
+    release:
+        types: [published]
+permissions:
+    contents: write
+    actions: read   # to read artifacts from other runs
+
+jobs:
+    build:
+        name: 'QMK Userspace Build'
+        uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
+        with:
+            qmk_repo: qmk/qmk_firmware
+            qmk_ref: refs/tags/${{ github.event.release.tag_name }}
+
+    attach-firmware-to-release:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Download binaries
+          if: always() && !cancelled()
+          uses: actions/download-artifact@v4
+          with:
+              name: Firmware
+
+        - name: Upload to the release
+          env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          run: gh release upload "${{ github.event.release.tag_name }}" keebio_iris_ce_rev1_cozy.uf2
