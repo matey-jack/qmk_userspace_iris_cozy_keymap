@@ -133,9 +133,16 @@ Details of how well everything is production tested:
 * The accent layer: Umlauts äöü and ß are unlikely to change, while everything else still needs production usage to evaluate its effectiveness.
 * The Letter mapping (just FYI, since probably few people come for that): I've been using this for more than ten years, and after recently trying to improve it without finding any worthwhile improvements, I will probably use it until the end of my life.
 
-# Technical tipps
+# Building this repository
 
-Use `qmk -v compile-userspace` to see compile errors and other outputs.
+`qmk compile-userspace` doesn't show any error messages. My workaround is to run `qmk compile -km cozy` instead.
+
+The Github Actions workflow should run the compile on every push. 
+
+To get an easily downloadable firmware, push a new tag to the repository.
+The workflow will create a release from that tag and attach the firmware to it.
+You should then go to that release and add some release notes, since none are added automatically.
+
 
 # Original QMK Readme follows
 
