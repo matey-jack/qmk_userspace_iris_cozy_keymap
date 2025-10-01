@@ -112,7 +112,7 @@ int current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Only tested and enabled on Windows (see config.h).
 #define UC_PMIL UC(0x2030) // per mille sign
 #define UC_NDSH UC(0x2013) // en-dash
-#define UC_oe   UC(0x0153) // œ - don't ask me why US ext. intl. has æ, but not œ! Pourtant ils aiment manger le bœf!
+#define UC_oe   UC(0x0153) // œ - don't ask me why US ext. intl. has æ, but not œ! Pourtant ils aiment manger le bœuf!
 #define UC_OE   UC(0x0152) // Œ
 
 /*
