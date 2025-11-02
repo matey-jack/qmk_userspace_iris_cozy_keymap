@@ -15,6 +15,7 @@ enum layer_names {
     L_BASE,
     L_COMBINE,
     L_ALTGR,
+    L_WINDOWS,
     L_FN,
 };
 // "Shift" and "AltGr" keys in this layout are layer switches, thus send nothing to the computer.
@@ -78,6 +79,10 @@ int current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Since this layer should behave like a combining accent key, it is activated by a one-shot key press.
 #define L_COMB   OSL(L_COMBINE)
 
+// Windows-Layer and Win+Tab when tapped. 
+// Needs custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
+#define L_WIN    LT(L_WINDOWS, KC_TAB)
+
 // auxiliary layer keys, partly for historical reasons, partly because some combos are more comfortable this way.
 #define L2_Y     LT(L_ALTGR, KC_Y)
 #define L2_MINS  LT(L_ALTGR, KC_MINS)
@@ -98,15 +103,15 @@ int current_quote_mode = QUOTE_MODE_SAMSUNG;
 /*
     Various convenience keycodes.
 */
-// Mod/Tap for Win and Win+Tab. Need custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
-#define MC_WINT  MT(MOD_RGUI, KC_TAB)
-
 // previous and next word cursor navigation
 // (This helps avoid pressing Ctrl modifier in addition to the layer toggle.)
 #define KC_PRWD  LCTL(KC_LEFT)
 #define KC_NXWD  LCTL(KC_RGHT)
-#define KC_TOP   LCTL(KC_HOME)
-#define KC_BOTT  LCTL(KC_END )
+// previous and next (virtual) desktop 
+#define KC_PRDESK G(C(KC_LEFT))
+#define KC_NXDESK G(C(KC_RIGHT))
+// screenshot (Windows Snipping Tool)
+#define KC_SCRNS G(S(KC_S))
 
 // Some delicious Unicode characters, that don't have a direct mapping in US intl. layout.
 // Only tested and enabled on Windows (see config.h).
@@ -123,8 +128,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
             KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_PLUS ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
-            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,   MC_WINT, KC_J   , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
-                                  KC_LALT, L2_DEL , KC_SPC ,       KC_E, L2_ENT , KC_RCTL
+            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,      L_WIN, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
+                                    KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_ENT, KC_RCTL
         ),
     // Current accented letters: äöü ß àèé çñ.
     // Current extras: µ.
@@ -144,12 +149,20 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  ,  KC_RCTL
         ),
+    // windows layer, just a few macros.
+    [L_WINDOWS] = LAYOUT(
+            KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO,                   KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
+            KC_NO, KC_NO, KC_PRDESK , G(KC_UP)  , KC_NXDESK  , KC_NO,                   KC_SCRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
+            KC_NO, KC_NO, G(KC_LEFT), G(KC_DOWN), G(KC_RIGHT), KC_NO,                   KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
+			KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO, KC_NO,   KC_TRNS, KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
+                                                               KC_NO, KC_NO,   KC_NO  , KC_NO   , KC_NO, KC_NO
+        ),
     // function layer, like on a laptop.
     [L_FN] = LAYOUT(
             KC_TRNS, KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
             MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , MX_TQM ,                       KC_NO  , RM_TOGG, RM_HUED, RM_SATD, RM_VALD, QK_BOOT,
             OSM_SFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       KC_NO  , RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, OSM_SFT,
-			OSM_CTL, KC_NO, KC_NO, C(KC_PGUP), C(KC_PGDN), KC_NO, KC_LGUI,     KC_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
+			OSM_CTL, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_LGUI,     KC_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
                                                  OSM_ALT , OSM_AGR, KC_NO,     KC_NO  , OSM_AGR, OSM_CTL
         )
 };
@@ -183,7 +196,7 @@ void toggle_quote_mode(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case MC_WINT:
+        case L_WIN:
             // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
             if (record->tap.count && record->event.pressed) {
                 tap_code16(RWIN(KC_TAB));
@@ -265,7 +278,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev15.2-swap-plus, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev15.5-windows-layer, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
