@@ -1,3 +1,5 @@
+.idea/
+
 # local symbolic link to bin/qmk
 /qmk
 

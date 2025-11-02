@@ -122,10 +122,10 @@ By moving some characters to the accent layer, the AltGr layer can become nicer.
 Details of how well everything is production tested:
 * The position of basic keys (like Escape, Backspace, Tab, Shift, Enter, Ctrl): I defined those during the early days of my Ergodox use about 11 months ago. 
   All of that worked great both on the Ergodox and the Iris, so I am unlike to modify any of that. 
-  - Exception: I initially thought that Space and Enter should be on symmetric (mirrored) positions, but later decided that the two most-used thumb keys (Space and E) should be in mirrored positions. I did this swap only recently and still get used to it. It also has the advantage that AltGr is now on mirrored thumb keys on each side. (Remember that AltGr is on the less-used keys to avoid mistypings due to the tap/hold logic.)
+  - Exception: I initially thought that Space and Enter should be on symmetric (mirrored) positions, but later decided that the two most-used thumb keys (Space and E) should be in mirrored positions. I did this swap only recently and I'm still getting used to it. It also has the advantage that AltGr is now on mirrored thumb keys on each side. (Remember that AltGr is on the less-used keys to avoid mistypings due to the tap/hold logic.)
 * The Shift pairings: basically unchanged, since my first Iris keymap, and production-proven. (Even the Ergodox version before that was only slightly different, because of having two more keys in the number row to work with.)
-    - But there is potential to use the US keycap `+=` instead of `/?` which would reflect both layers correctly. 
-      Then `/` could be mapped to Shift+9 where it would directly neighbor `*`. A very aesthetic match, right? :-D 
+    - I only recently removed the `/?` US keycap in favor of `+=`. (But I use it in the German way, `+` on the base layer `=` on Shift.) 
+      Now `/` is mapped to Shift+9 right next to `*`. A very logical pair! (Similarly, `+` and `-` are both on the base layer. Nice for Zooming in and out!)
 * The Nav layer: has been the same for more than ten years. 
   I actually got a programmable keyboard partly because the software implementation of the nav layer was unreliable.
   Now with Firmware it's better indeed... but I miss having actual additional arrow keys. :-/

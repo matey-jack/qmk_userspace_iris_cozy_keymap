@@ -113,7 +113,6 @@ int current_quote_mode = QUOTE_MODE_SAMSUNG;
 #define UC_PMIL UC(0x2030) // per mille sign
 #define UC_NDSH UC(0x2013) // en-dash
 #define UC_oe   UC(0x0153) // œ - don't ask me why US ext. intl. has æ, but not œ! Pourtant ils aiment manger le bœuf!
-#define UC_OE   UC(0x0152) // Œ
 
 /*
     Comment for visually separating the actual keymap.
@@ -122,7 +121,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // standard keyboard layer
     [L_BASE] = LAYOUT(
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
-            KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_EQL ,
+            KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_PLUS ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
             KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,   MC_WINT, KC_J   , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
                                   KC_LALT, L2_DEL , KC_SPC ,       KC_E, L2_ENT , KC_RCTL
@@ -142,8 +141,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_NO  , US_SECT, US_CENT, US_PND , US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, MX_TILD, KC_DEL ,
             KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, MX_FUER,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, KC_NO  ,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
-			KC_LCTL, KC_TRNS, KC_TOP , KC_PGUP, KC_PGDN, KC_BOTT, KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
-                                                KC_LALT, KC_BSPC, KC_ENT ,     KC_NO  ,KC_SPC ,  KC_RCTL
+			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
+                                                KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  ,  KC_RCTL
         ),
     // function layer, like on a laptop.
     [L_FN] = LAYOUT(
@@ -158,11 +157,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 const custom_shift_key_t custom_shift_keys[] = {
   // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
   {KC_9   , KC_SLSH}, // Shift 9 is /
+  {KC_PLUS   , KC_EQL}, // Shift + is =  (matching the German standard shift levels)
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
-  // TODO: this doesn't work: it seems to send "arrow up" instead.
-  {UC_oe  , UC_OE},   // Shift œ should be Œ
 };
 
 // 3 ms still had some dropped letters.
@@ -267,7 +265,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev15-firmware-accents, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev15.2-swap-plus, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
