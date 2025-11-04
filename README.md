@@ -3,25 +3,25 @@
 This keymap is a child of three different parents:
  - US ANSI
  - German Qwertz
- - The wide hand mapping for ANSI and ISO keyboards which originated first as a Colemak mod.
+ - My personal ergonomic letter map implemented as a national "keyboard layout" for various operating systems: https://github.com/matey-jack/gemuetliche-tastatur – This itself is based on a "wide hands" mod for ANSI keyboards
 
-The keymap assumes that your computer is running the "US extended international" layout. It works on US ANSI as well, but then, of course, all the non-English letters and some other characters are missing! (Details below.)
+The keymap assumes that your computer is running the "US extended international" layout. 
+It works on US ANSI as well, but then, of course, all the non-English letters and some other characters are missing! 
+There is a switch in the keymap to allow apostrophe and quote in US ext int'l to be typed the same as ANSI. (Details below.)
 
 The US / German mix is mostly reflected in the distribution of punctuation characters, 
-while the wide hand mapping brings the concept of typing a letter (here E) with the right thumb. 
+while my "gemuetliche Tastatur" brings the concept of typing a letter (here E) with the right thumb. 
 (Shift on the edge of the home row also indirectly comes from there.)
 
 What makes this keymap special is that I have already typed with a "software split" (aka "wide") keymap on the traditional ANSI layout for many years. 
 The finger movement for this physical split keyboard is now very similar to the wide ANSI keymap that can be used on any dumb keyboard, even laptops. 
-(See [Github: gemütliche Tastatur](https://github.com/matey-jack/gemuetliche-tastatur), 
-although that needs to be updated to sync better with the new physical split keyboard.)
 
 TODO: Screeshot of the AltGr and Nav layer from the spreadsheet.
 
 So while this Iris keymap is very compatible with the ANSI / ISO fingerings, those fingerings match the wide mod, which is not always the traditional one.
 
 
-![Iris CE with MBK Glow key caps reflecting this key map as closely as the caps allow](<Iris CE with Cozy Keyboard mapping 2025-09.jpg>)
+![Iris CE with MBK Glow key caps reflecting this key map as closely as the caps allow](<Iris CE with Cozy Keyboard mapping 2025-09.jpg>) TODO: update for `+=` change to base layer!
 
 [Google Sheet with the exact keymapping (at some point in time)](https://docs.google.com/spreadsheets/d/1JkIiKLAgzVKIijrSS0zbML-NLrd7E52zQ_xwXzjz3oQ/edit?usp=sharing)
 
@@ -48,13 +48,13 @@ Punctuation and Shift mappings:
  - I put a lot of thought in choosing the 20 punctuation characters to map to the base and shift layers of those keys (10 on Shift+number, 2×5 on the pure punctuation keys). This allows writing normal text as easily as possible and still finding most of the punctuation in a familiar place (either from US ANSI, German Qwertz, or Cozy special.)
  - In particular, the Shift mapping on numbers 1..8 follows US ANSI, which is also making nice use of the shine-through keycaps that are only available with those US labels. (Parentheses are all collected on the AltGr layer, leaving Shift 9 and 0 free.)
  - `?` is retained in its German position on Shift+0, which is a great analog to the (US and German) position of `!`.
- - TODO: `/` on Shift+9 as a neighbor of `*` (and similar to its position in the German standard). 
-         This way, we'll not be confused by the `/?` keycap which doesn't actually type `?`.  
+ - `/` is on Shift+9 as a neighbor of `*` (and similar to its position in the German standard, but allowing the Shifted key labels from 1 to 8 to correspond exactly to US ANSI). 
  - The bottom row triplet `,.-` is exactly as in the German standard, nicely carrying `;:_` on the Shift mapping, which is both logical and comfortable, and lets us dispose with the `;:` key of US ANSI. The Shift labels `,<` and `.>` are still correct, though, because `<` and `>` are mapped to these keys on the AltGr layer (see "stack of parentheses" below).
+ - Since we have `-` on the base layer, I also put `+` on the base layer (as in the German standard). 
+   `=` is mapped on the same key (to reuse the US key cap), but on the Shift layer (like in German, so that at least the part of pressing Shift is preserved... and it's also the same finger...)
  - Big thanks goes to Pascal Getreuer for his "custom_shift_keys" module, which makes all this possible! 
    I think that this is an essential tool to help non-American users make good keymaps for their language!
  - The apostrophe/quote key is the standard US shift-pairing, but as a key moves to the left hand to avoid bigram conflicts with the letter T. I recommend swapping this back to the right edge for anyone using a different letter mapping (like Colemak, Qwerty, or other).
- - The `/` ends up on the top right, just because that spot is free. For anyone used to a US ANSI keyboard, I recommend simply swapping its position with the `-_` key.
 
 QMK Layers:
  - There is an AltGr layer and a Fn layer which mimic a bit the AltGr layer from traditional keyboard layouts (only with more characters mapped on it) and the Fn layer from laptop and other small keyboards.
@@ -124,8 +124,7 @@ Details of how well everything is production tested:
   All of that worked great both on the Ergodox and the Iris, so I am unlike to modify any of that. 
   - Exception: I initially thought that Space and Enter should be on symmetric (mirrored) positions, but later decided that the two most-used thumb keys (Space and E) should be in mirrored positions. I did this swap only recently and I'm still getting used to it. It also has the advantage that AltGr is now on mirrored thumb keys on each side. (Remember that AltGr is on the less-used keys to avoid mistypings due to the tap/hold logic.)
 * The Shift pairings: basically unchanged, since my first Iris keymap, and production-proven. (Even the Ergodox version before that was only slightly different, because of having two more keys in the number row to work with.)
-    - I only recently removed the `/?` US keycap in favor of `+=`. (But I use it in the German way, `+` on the base layer `=` on Shift.) 
-      Now `/` is mapped to Shift+9 right next to `*`. A very logical pair! (Similarly, `+` and `-` are both on the base layer. Nice for Zooming in and out!)
+    - I only recently removed the `/?` US keycap in favor of `+=`. After a few weeks, I can say that I like it!
 * The Nav layer: has been the same for more than ten years. 
   I actually got a programmable keyboard partly because the software implementation of the nav layer was unreliable.
   Now with Firmware it's better indeed... but I miss having actual additional arrow keys. :-/
@@ -135,7 +134,8 @@ Details of how well everything is production tested:
 
 # Building this repository
 
-`qmk compile-userspace` doesn't show any error messages. My workaround is to run `qmk compile -km cozy` instead.
+`qmk compile-userspace` doesn't show any error messages when it fails. 
+My workaround is to run `qmk compile -km cozy` instead.
 
 The Github Actions workflow should run the compile on every push. 
 
