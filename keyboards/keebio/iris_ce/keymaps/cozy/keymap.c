@@ -47,7 +47,7 @@ enum custom_keycodes {
     MX_AGRV,
 };
 
-enum quote_mode {
+typedef enum {
     // this works for the standard US ANSI keyboard on all platforms,
     // but on Google Pixel 4a it even works with US ext. intl.
     // This is great and all OS' should do it like this!
@@ -57,7 +57,7 @@ enum quote_mode {
     QUOTE_MODE_LINUX,
     // Maybe I should call it quote mode Windows, because it seems to be the same and Windows is the better known implementation.
     QUOTE_MODE_SAMSUNG,
-};
+} quote_mode_t;
 
 const char *const quote_mode_names[] = {
     [QUOTE_MODE_ANSI] = "ANSI",
@@ -66,7 +66,7 @@ const char *const quote_mode_names[] = {
 };
 
 // personal preference for my current main devices (Windows PC + Android Tablet).
-int current_quote_mode = QUOTE_MODE_SAMSUNG;
+quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 
 /*
     Layer toggles. With additional tap function.
@@ -170,10 +170,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 const custom_shift_key_t custom_shift_keys[] = {
   // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
   {KC_9   , KC_SLSH}, // Shift 9 is /
-  {KC_PLUS   , KC_EQL}, // Shift + is =  (matching the German standard shift levels)
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
+  {KC_PLUS, KC_EQL}, // Shift + is =  (matching the German standard shift levels)
 };
 
 // 3 ms still had some dropped letters.
@@ -184,7 +184,7 @@ void toggle_quote_mode(void) {
         case QUOTE_MODE_ANSI:
         //     current_quote_mode = QUOTE_MODE_LINUX;
         //     break;
-        // case QUOTE_MODE_LINUX:
+        case QUOTE_MODE_LINUX:
             current_quote_mode = QUOTE_MODE_SAMSUNG;
             break;
         case QUOTE_MODE_SAMSUNG:
@@ -225,6 +225,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     return false;
             }
         case MX_DQUO:
+        // This is all unused code, since the shift layer was removed.
+        // Instead the MX_QUOT above will be used with the Shift bit passed implicitly.
             if (!record->event.pressed) return false;
             switch (current_quote_mode) {
                 case QUOTE_MODE_ANSI:
