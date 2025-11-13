@@ -79,7 +79,7 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Since this layer should behave like a combining accent key, it is activated by a one-shot key press.
 #define L_COMB   OSL(L_COMBINE)
 
-// Windows-Layer and Win+Tab when tapped. 
+// Windows-Layer and Win+Tab when tapped.
 // Needs custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
 #define L_WIN    LT(L_WINDOWS, KC_TAB)
 
@@ -88,26 +88,13 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 #define L2_MINS  LT(L_ALTGR, KC_MINS)
 
 /*
-    Modifier keys.
-*/
-// One-shot-mods as an optional way to enter shortcuts with several modifiers.
-#define OSM_ALT  OSM(MOD_LALT)
-#define OSM_CTL  OSM(MOD_LCTL)
-#define OSM_SFT  OSM(MOD_LSFT)
-#define OSM_GUI  OSM(MOD_LGUI)
-
-// One-shot-mod AltGr key, so we can access all characters from software layout AltGr, that don't have
-// a direct mapping in our firmware AltGr layer. (Meant for rare characters and as workaround for mapping bugs.)
-#define OSM_AGR  OSM(MOD_RALT)
-
-/*
     Various convenience keycodes.
 */
 // previous and next word cursor navigation
 // (This helps avoid pressing Ctrl modifier in addition to the layer toggle.)
 #define KC_PRWD  LCTL(KC_LEFT)
 #define KC_NXWD  LCTL(KC_RGHT)
-// previous and next (virtual) desktop 
+// previous and next (virtual) desktop
 #define KC_PRDESK G(C(KC_LEFT))
 #define KC_NXDESK G(C(KC_RIGHT))
 // screenshot (Windows Snipping Tool)
@@ -144,7 +131,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // MX_BTIC and MX_TILD here are the 'live' key for programmers.
     [L_ALTGR] = LAYOUT(
             KC_NO  , US_SECT, US_CENT, US_PND , US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, MX_TILD, KC_DEL ,
-            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, MX_FUER,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, KC_NO  ,
+            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, KC_NO  ,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, KC_NO  ,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  ,  KC_RCTL
@@ -161,9 +148,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_FN] = LAYOUT(
             KC_TRNS, KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
             MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , MX_TQM ,                       KC_NO  , RM_TOGG, RM_HUED, RM_SATD, RM_VALD, QK_BOOT,
-            OSM_SFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       KC_NO  , RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, OSM_SFT,
-			OSM_CTL, KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_LGUI,     KC_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
-                                                 OSM_ALT , OSM_AGR, KC_NO,     KC_NO  , OSM_AGR, OSM_CTL
+            OS_LSFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       KC_NO  , RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, OS_RSFT,
+			OS_LCTL, QK_BOOT, KC_NO  , KC_NO  , KC_NO  , KC_NO  , OS_LGUI,     OS_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
+                                                OS_LALT, OS_RALT, KC_NO  ,     KC_NO  , OS_RALT, OS_RCTL
         )
 };
 
@@ -173,7 +160,9 @@ const custom_shift_key_t custom_shift_keys[] = {
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
-  {KC_PLUS, KC_EQL}, // Shift + is =  (matching the German standard shift levels)
+  // This just swaps + and = (since + is mapped in base layer above).
+  // Now both characters still match the US keycapp, but with the same shift level as on the German Qwertz layout.
+  {KC_PLUS, KC_EQL}, // Shift + is =
 };
 
 // 3 ms still had some dropped letters.
