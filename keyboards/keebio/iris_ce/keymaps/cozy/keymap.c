@@ -104,7 +104,7 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Only tested and enabled on Windows (see config.h).
 #define UC_PMIL UC(0x2030) // per mille sign
 #define UC_NDSH UC(0x2013) // en-dash
-#define UC_oe   UC(0x0153) // œ - don't ask me why US ext. intl. has æ, but not œ! Pourtant ils aiment manger le bœuf!
+#define UC_oe   UC(0x0153) // fun-fact: the sad story of why this is not in Latin-1 and thus not in the keymap: https://en.wikipedia.org/wiki/ISO/IEC_8859-1
 
 /*
     Comment for visually separating the actual keymap.
@@ -145,9 +145,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                                                KC_NO, KC_NO,   KC_NO  , KC_NO   , KC_NO, KC_NO
         ),
     // function layer, like on a laptop.
+    // Note that Hue cycles around, while Speed, Saturation and Value clamp at min/max.
+    // Shift + any of the RGB keys moves the other way.
     [L_FN] = LAYOUT(
             KC_TRNS, KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
-            MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , MX_TQM ,                       KC_NO  , RM_TOGG, RM_HUED, RM_SATD, RM_VALD, QK_BOOT,
+            MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , MX_TQM ,                       KC_NO  , RM_TOGG, RM_SPDU, RM_SATD, RM_VALD, QK_BOOT,
             OS_LSFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       KC_NO  , RM_NEXT, RM_HUEU, RM_SATU, RM_VALU, OS_RSFT,
 			OS_LCTL, QK_BOOT, KC_NO  , KC_NO  , KC_NO  , KC_NO  , OS_LGUI,     OS_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
                                                 OS_LALT, OS_RALT, KC_NO  ,     KC_NO  , OS_RALT, OS_RCTL
@@ -269,7 +271,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev15.5-windows-layer, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev16-alpha-test-rgb, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
