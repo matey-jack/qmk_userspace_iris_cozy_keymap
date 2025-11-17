@@ -11,6 +11,9 @@
 // all before the tap/hold key is released.
 #define PERMISSIVE_HOLD
 
+//  Needed for VIA, since the default is only 4.
+#define DYNAMIC_KEYMAP_LAYER_COUNT 5
+
 // Needed for layer-aware RGB keylights.
 #define SPLIT_LAYER_STATE_ENABLE
 
