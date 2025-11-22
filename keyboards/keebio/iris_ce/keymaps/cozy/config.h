@@ -23,7 +23,7 @@
 #define UNICODE_SELECTED_MODES      UNICODE_MODE_WINDOWS
 
 // RGB_MATRIX_SOLID_COLOR ==> is always on (has no ENABLE_ flag)
-#define ENABLE_RGB_MATRIX_MODS_TOGGLES
+#define ENABLE_RGB_MATRIX_KEY_GROUPS
 
 // Disable all other animations so that we can simply toggle between the solid color and the mods&toggles.
 #undef ENABLE_RGB_MATRIX_ALPHAS_MODS
