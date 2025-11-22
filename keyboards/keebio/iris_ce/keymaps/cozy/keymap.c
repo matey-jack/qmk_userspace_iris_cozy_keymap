@@ -102,10 +102,10 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 
 // Some delicious Unicode characters, that don't have a direct mapping in US intl. layout.
 // Only tested and enabled on Windows (see config.h).
-#define UC_PMIL UC(0x2030) // per mille sign
-#define UC_NDSH UC(0x2013) // en-dash
-#define UC_oe   UC(0x0153) // fun-fact: the sad story of why this is not in Latin-1 and thus not in the keymap: https://en.wikipedia.org/wiki/ISO/IEC_8859-1
-
+#define UC_PMIL UC(0x2030) // per mille sign ‰
+#define UC_NDSH UC(0x2013) // en-dash –
+#define UC_oe   UC(0x0153) // œ fun-fact: the sad story of why this is not in Latin-1 and thus not in the OS' keymap: https://en.wikipedia.org/wiki/ISO/IEC_8859-1
+#define UC_BOT  UC(0x22A5) // bottom ⊥ – doesn't work :(
 /*
     Comment for visually separating the actual keymap.
 */
@@ -121,34 +121,34 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Current accented letters: äöü ß àèé çñ.
     // Current extras: µ.
     [L_COMBINE] = LAYOUT(
-            KC_TRNS, US_QRTR, US_HALF, US_TQTR, KC_TRNS, KC_TRNS,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, KC_TRNS,
-            KC_TRNS, US_AE  , KC_TRNS, KC_TRNS, MX_FUER, KC_TRNS,                     US_SS  , KC_TRNS, US_UDIA, US_ODIA, KC_TRNS, KC_TRNS,
-            KC_TRNS, US_ADIA, US_SS  , KC_TRNS, KC_TRNS, KC_TRNS,                     KC_TRNS, US_NTIL, KC_TRNS, UC_oe  , US_OSTR, KC_TRNS,
-            KC_TRNS, MX_AGRV, KC_TRNS, US_CCED, KC_TRNS, KC_TRNS, KC_TRNS,   KC_TRNS, KC_TRNS, US_MICR, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-                                                KC_TRNS, KC_TRNS, KC_TRNS,   US_EACU, MX_EGRV, KC_TRNS
+            TO(0)  , US_QRTR, US_HALF, US_TQTR, KC_NO  , KC_NO  ,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, KC_NO  ,
+            KC_NO  , US_AE  , KC_NO  , KC_NO  , MX_FUER, TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
+            KC_NO  , US_ADIA, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
+            KC_NO  , MX_AGRV, KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
+                                                KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO  
         ),
     // Alternate character and navigation layer.
     // MX_BTIC and MX_TILD here are the 'live' key for programmers.
     [L_ALTGR] = LAYOUT(
             KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
             KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, KC_NO  ,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
-            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
+            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       UC_BOT , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
-                                                KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  ,  KC_RCTL
+                                                KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  , KC_RCTL
         ),
     // Windows layer, just a few macros.
     [L_WINDOWS] = LAYOUT(
             KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO,                   KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
             KC_NO, KC_NO, KC_PRDESK , G(KC_UP)  , KC_NXDESK  , KC_NO,                   KC_SCRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
             KC_NO, KC_NO, G(KC_LEFT), G(KC_DOWN), G(KC_RIGHT), KC_NO,                   KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-			KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO, KC_NO,   KC_TRNS, KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
+			KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO, KC_NO,   KC_NO  , KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
                                                                KC_NO, KC_NO,   KC_NO  , KC_NO   , KC_NO, KC_NO
         ),
     // Function layer, like on a laptop.
     // Note that Hue cycles around, while Speed, Saturation and Value clamp at min/max.
     // Shift + any of the RGB Matric keys (RM_***) moves the other way.
     [L_FN] = LAYOUT(
-            KC_TRNS, KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
+            KC_NO  , KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
             MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , KC_NO  ,                       RM_TOGG, RM_HUED, RM_SPDD, RM_SATD, RM_VALD, QK_BOOT,
             OS_LSFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       RM_NEXT, RM_HUEU, RM_SPDU, RM_SATU, RM_VALU, OS_RSFT,
 			OS_LCTL, QK_BOOT, KC_NO  , KC_NO  , KC_NO  , MX_TQM , OS_LGUI,     OS_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
@@ -271,7 +271,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev16.1-mod-togg-delta-hue, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev16.6-osl-exit, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
