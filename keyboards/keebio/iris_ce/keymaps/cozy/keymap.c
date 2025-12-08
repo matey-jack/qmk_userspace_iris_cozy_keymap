@@ -15,16 +15,10 @@ enum layer_names {
     L_BASE,
     L_COMBINE,
     L_ALTGR,
-    L_WINDOWS,
     L_FN,
 };
-// "Shift" and "AltGr" keys in this layout are layer switches, thus send nothing to the computer.
-// But the Shift key on the AltGr and Fn layers is mapped to a normal Shift.
-// This can be used both for expected behavior of cursor and navigation keys.
-// It can also be used to send plain Shift to the computer to combine it with mouse clicks.
-// (Remember that when pressing AltGr+Shift AltGr is only a layer switch, so that the computer sees only Shift.)
-// Unfortunately, since the LT(,) macro only supports basic keycodes, we always have to press first AltGr then Shift to do selections.
-// With Shift already pressed, the two AltGr keys become simple Y and _ keys. (Which is not the case when using pure Shift...)
+// The AltGr does almost everything that the AltGr level does in the software layout, 
+// therefore we don't need the AltGr modifier on the base layer. (But there's one on the Fn layer.)
 
 // Macros!
 enum custom_keycodes {
@@ -79,10 +73,6 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Since this layer should behave like a combining accent key, it is activated by a one-shot key press.
 #define L_COMB   OSL(L_COMBINE)
 
-// Windows-Layer and Win+Tab when tapped.
-// Needs custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
-#define L_WIN    LT(L_WINDOWS, KC_TAB)
-
 // auxiliary layer keys, partly for historical reasons, partly because some combos are more comfortable this way.
 #define L2_Y     LT(L_ALTGR, KC_Y)
 #define L2_MINS  LT(L_ALTGR, KC_MINS)
@@ -90,6 +80,9 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 /*
     Various convenience keycodes.
 */
+// Mod/Tap for Win and Win+Tab. Need custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
+#define MC_WINT  MT(MOD_RGUI, KC_TAB)
+
 // previous and next word cursor navigation
 // (This helps avoid pressing Ctrl modifier in addition to the layer toggle.)
 #define KC_PRWD  LCTL(KC_LEFT)
@@ -103,7 +96,7 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 // Some delicious Unicode characters, that don't have a direct mapping in US intl. layout.
 // Only tested and enabled on Windows (see config.h).
 #define UC_PMIL UC(0x2030) // per mille sign ‰
-#define UC_NDSH UC(0x2013) // en-dash –
+#define UC_NDSH UC(0x2013) // en-dash –  // interestingly, Windows also types that with G(KC_MINS) 🤯
 #define UC_oe   UC(0x0153) // œ fun-fact: the sad story of why this is not in Latin-1 and thus not in the OS' keymap: https://en.wikipedia.org/wiki/ISO/IEC_8859-1
 #define UC_BOT  UC(0x22A5) // bottom ⊥ – doesn't work :(
 /*
@@ -115,13 +108,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
             KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_PLUS ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
-            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,      L_WIN, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
+            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_ENT, KC_RCTL
         ),
-    // Current accented letters: äöü ß àèé çñ.
+    // Current accented letters: äöü ß àèé çñ æ œ.
     // Current extras: µ.
+    // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode. 
+    // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
-            TO(0)  , US_QRTR, US_HALF, US_TQTR, KC_NO  , KC_NO  ,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, KC_NO  ,
+            TO(0)  , US_QRTR, US_HALF, US_TQTR, KC_NO  , KC_NO  ,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, TO(0)  ,
             KC_NO  , US_AE  , KC_NO  , KC_NO  , MX_FUER, TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
             KC_NO  , US_ADIA, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
             KC_NO  , MX_AGRV, KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
@@ -136,23 +131,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  , KC_RCTL
         ),
-    // Windows layer, just a few macros.
-    [L_WINDOWS] = LAYOUT(
-            KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO,                   KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-            KC_NO, KC_NO, KC_PRDESK , G(KC_UP)  , KC_NXDESK  , KC_NO,                   KC_SCRNS, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-            KC_NO, KC_NO, G(KC_LEFT), G(KC_DOWN), G(KC_RIGHT), KC_NO,                   KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-			KC_NO, KC_NO, KC_NO     , KC_NO     , KC_NO      , KC_NO, KC_NO,   KC_NO  , KC_NO   , KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-                                                               KC_NO, KC_NO,   KC_NO  , KC_NO   , KC_NO, KC_NO
-        ),
     // Function layer, like on a laptop.
     // Note that Hue cycles around, while Speed, Saturation and Value clamp at min/max.
     // Shift + any of the RGB Matric keys (RM_***) moves the other way.
+    // C(KC_E) is a workaround for Terminal apps that don't handle the End key properly.
     [L_FN] = LAYOUT(
-            KC_NO  , KC_F1  , KC_F2  , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
-            MX_VERS, KC_F11 , KC_F12 , KC_NO  , KC_NO  , KC_NO  ,                       RM_TOGG, RM_HUED, RM_SPDD, RM_SATD, RM_VALD, QK_BOOT,
-            OS_LSFT, KC_MPRV, KC_MNXT, KC_NO  , KC_NO  , KC_NO  ,                       RM_NEXT, RM_HUEU, RM_SPDU, RM_SATU, RM_VALU, OS_RSFT,
-			OS_LCTL, QK_BOOT, KC_NO  , KC_NO  , KC_NO  , MX_TQM , OS_LGUI,     OS_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
-                                                OS_LALT, OS_RALT, KC_NO  ,     KC_NO  , OS_RALT, OS_RCTL
+            KC_NO  , KC_F1  , KC_F2   , KC_F3  , KC_F4  , KC_F5  ,                       KC_F6  , KC_F7  , KC_F8  , KC_F9  , KC_F10 , EE_CLR ,
+            MX_VERS, KC_F11 , KC_F12, KC_PRDESK, KC_NXDESK, KC_NO,                       RM_TOGG, RM_HUED, RM_SPDD, RM_SATD, RM_VALD, QK_BOOT,
+            OS_LSFT, KC_MPRV, KC_SCRNS, KC_NO  , KC_NO  , C(KC_E),                       RM_NEXT, RM_HUEU, RM_SPDU, RM_SATU, RM_VALU, OS_RSFT,
+			OS_LCTL, QK_BOOT, KC_NO   , KC_NO  , KC_NO  , MX_TQM , OS_LGUI,     OS_RGUI, KC_MSTP, KC_MPLY, KC_VOLD, KC_VOLU, KC_MUTE, KC_NO  ,
+                                                 OS_LALT, OS_RALT, KC_NO  ,     KC_NO  , OS_RALT, OS_RCTL
         )
 };
 
@@ -187,7 +175,7 @@ void toggle_quote_mode(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-        case L_WIN:
+        case MC_WINT:
             // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
             if (record->tap.count && record->event.pressed) {
                 tap_code16(RWIN(KC_TAB));
@@ -271,7 +259,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev16.6-osl-exit, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev17-no-windows-layer, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
