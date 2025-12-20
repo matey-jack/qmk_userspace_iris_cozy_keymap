@@ -146,6 +146,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 const custom_shift_key_t custom_shift_keys[] = {
   // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
+  {KC_6   , US_SS  }, // Shift 6 is ß
   {KC_9   , KC_SLSH}, // Shift 9 is /
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
@@ -259,7 +260,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev17-no-windows-layer, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev17.1 Shift-6 Esszett, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
