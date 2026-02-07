@@ -17,7 +17,7 @@ enum layer_names {
     L_ALTGR,
     L_FN,
 };
-// The AltGr does almost everything that the AltGr level does in the software layout, 
+// The AltGr does almost everything that the AltGr level does in the software layout,
 // therefore we don't need the AltGr modifier on the base layer. (But there's one on the Fn layer.)
 
 // Macros!
@@ -106,28 +106,30 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // standard keyboard layer
     [L_BASE] = LAYOUT(
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
-            KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_PLUS ,
+            MX_TABA, KC_Q, KC_W, KC_B, KC_F, US_ODIA,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , US_UDIA ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
             KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_ENT, KC_RCTL
         ),
-    // Current accented letters: äöü ß àèé çñ æ œ.
-    // Current extras: µ.
-    // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode. 
+    // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
+    // accented letters: äöü ß àèé çñ æ œ.
+    // combining accents: á à ã â ä
+    // other: µ ¼½¾.
+    // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
             TO(0)  , US_QRTR, US_HALF, US_TQTR, KC_NO  , KC_NO  ,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, TO(0)  ,
             KC_NO  , US_AE  , KC_NO  , KC_NO  , MX_FUER, TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
             KC_NO  , US_ADIA, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
             KC_NO  , MX_AGRV, KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
-                                                KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO  
+                                                KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO
         ),
     // Alternate character and navigation layer.
     // MX_BTIC and MX_TILD here are the 'live' key for programmers.
     [L_ALTGR] = LAYOUT(
-            KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
-            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, KC_NO  ,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
-            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       UC_BOT , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
+            KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       MX_HAT , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
+            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
+            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       US_DEG , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  , KC_RCTL
         ),
@@ -145,15 +147,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 const custom_shift_key_t custom_shift_keys[] = {
+  // the live hat ^ of US intl. needs more than one tap, thus we can't have it here. And + has no other home, so put it here, not far from *.
+  {KC_6   , KC_PLUS}, // Shift 6 is +
   // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
-  {KC_6   , US_SS  }, // Shift 6 is ß
   {KC_9   , KC_SLSH}, // Shift 9 is /
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
-  // This just swaps + and = (since + is mapped in base layer above).
-  // Now both characters still match the US keycapp, but with the same shift level as on the German Qwertz layout.
-  {KC_PLUS, KC_EQL}, // Shift + is =
 };
 
 // 3 ms still had some dropped letters.
@@ -232,6 +232,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 case QUOTE_MODE_LINUX:
                 case QUOTE_MODE_SAMSUNG:
                     tap_code(KC_QUOT);
+                    return false;
+            }
+        case MX_HAT:
+            if (!record->event.pressed) return false;
+            switch (current_quote_mode) {
+                case QUOTE_MODE_ANSI:
+                    // implicitly contains Shift
+                    tap_code16(KC_CIRC);
+                    return false;
+                case QUOTE_MODE_LINUX:
+                case QUOTE_MODE_SAMSUNG:
+                    tap_code16(KC_CIRC);
+                    tap_code(KC_SPACE);
                     return false;
             }
         case MX_BTIC:
