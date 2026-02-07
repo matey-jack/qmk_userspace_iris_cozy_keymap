@@ -135,7 +135,7 @@ Details of how well everything is production tested:
 # Building this repository
 
 `qmk compile-userspace` doesn't show any error messages when it fails. 
-My workaround is to run `qmk compile -km cozy` instead.
+My workaround is to run `./qmk compile -km cozy` instead. 
 
 The Github Actions workflow should run the compile on every push. 
 

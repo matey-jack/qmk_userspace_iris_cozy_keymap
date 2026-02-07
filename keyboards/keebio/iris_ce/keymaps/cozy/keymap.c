@@ -23,12 +23,14 @@ enum layer_names {
 // Macros!
 enum custom_keycodes {
     MX_VERS = SAFE_RANGE,
+    MX_TABA,  // Chameleon key for Tab and äÄ.
     MX_TQM ,  // toggle quote mode
     // Next three are for characters that need different key taps on Google Pixel and other devices.
     // Toggled by MX_TQM.
     MX_QUOT,
     MX_ACUT,
     MX_DQUO,
+    MX_HAT,
     // KC_GRV aka US_DGRV works same on both devices, it produces a dead grave.
 
     // The following are not device-dependent, but to save typing effort.
@@ -81,6 +83,7 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
     Various convenience keycodes.
 */
 // Mod/Tap for Win and Win+Tab. Need custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
+// Hint to open the start menu: use Ctrl+Esc. 
 #define MC_WINT  MT(MOD_RGUI, KC_TAB)
 
 // previous and next word cursor navigation
@@ -108,7 +111,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
             MX_TABA, KC_Q, KC_W, KC_B, KC_F, US_ODIA,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , US_UDIA ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
-            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
+            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, MC_WINT,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
     // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
@@ -300,7 +303,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev17.1 Shift-6 Esszett, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev20 base-layer Umlauts, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
