@@ -128,13 +128,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                                 KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO
         ),
     // Alternate character and navigation layer.
-    // MX_BTIC and MX_TILD here are the 'live' key for programmers.
+    // MX_HAT, MX_BTIC, and MX_TILD here are the 'live' (non-combining) keys (as used in programming languages, among others).
     [L_ALTGR] = LAYOUT(
             KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       MX_HAT , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
             KC_TAB , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       US_DEG , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
-                                                KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  , KC_RCTL
+                                                KC_LALT, KC_TRNS, KC_ENT ,     KC_NO  , KC_TRNS, KC_RCTL
         ),
     // Function layer, like on a laptop.
     // Note that Hue cycles around, while Speed, Saturation and Value clamp at min/max.
@@ -303,7 +303,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev20 base-layer Umlauts, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay("Layout ASDR_NILT standalone, rev20a2 base-layer Umlauts, ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
