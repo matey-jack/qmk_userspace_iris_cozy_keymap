@@ -83,7 +83,7 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
     Various convenience keycodes.
 */
 // Mod/Tap for Win and Win+Tab. Need custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
-// Hint to open the start menu: use Ctrl+Esc. 
+// Hint to open the start menu: use Ctrl+Esc. (Or L2 + a tab on the Gui key.)
 #define MC_WINT  MT(MOD_RGUI, KC_TAB)
 
 // previous and next word cursor navigation
@@ -131,7 +131,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // MX_BTIC and MX_TILD here are the 'live' key for programmers.
     [L_ALTGR] = LAYOUT(
             KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       MX_HAT , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
-            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
+            KC_TAB , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       US_DEG , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  , KC_RCTL
