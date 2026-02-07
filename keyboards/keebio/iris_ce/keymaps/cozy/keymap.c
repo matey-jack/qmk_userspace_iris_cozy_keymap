@@ -66,9 +66,9 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
     Layer toggles. With additional tap function.
 */
 #define L2_DEL   LT(L_ALTGR, KC_DEL)
-#define L2_ENT   LT(L_ALTGR, KC_ENT)
+#define L2_INS   LT(L_ALTGR, KC_INS)
 #define L3_ESC   LT(L_FN, KC_ESC)
-#define L3_INS   LT(L_FN, KC_INS)
+#define L3_ENT   LT(L_FN, KC_ENT)
 
 // Since this layer should behave like a combining accent key, it is activated by a one-shot key press.
 #define L_COMB   OSL(L_COMBINE)
@@ -108,8 +108,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
             MX_TABA, KC_Q, KC_W, KC_B, KC_F, US_ODIA,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , US_UDIA ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
-            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
-                                    KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_ENT, KC_RCTL
+            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
+                                    KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
     // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
     // accented letters: äöü ß àèé çñ æ œ.
@@ -172,10 +172,37 @@ void toggle_quote_mode(void) {
             break;
     }
     // TODO: flash the LED on letter A, L or S to indicate the new quote mode.
+    // Actually, that's not as important, since I will usually test the quote right after switching.
+    // More useful, however, would be to do the switching on a further-away layer (such as L_COMBINE) to avoid accidental presses.
 }
+
+static bool taba_was_modded = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
+        case MX_TABA:
+            // Should behave as Tab when Alt, Ctrl, or Gui is held. Should behave as ä in all other cases (including when just Shift is pressed).
+            const uint8_t mods    = get_mods();
+            // only need to check the left ones, because the right ones have one extra bit that we can ignore.
+            uint8_t       modded = mods & (MOD_LCTL | MOD_LALT | MOD_LGUI);
+            if (record->event.pressed) {
+                taba_was_modded = modded;
+                if (modded) {
+                    add_key(KC_TAB);
+                } else {
+                    add_key(KC_Q);
+                    add_mods(MOD_RALT);
+                }
+            } else {
+                if (taba_was_modded) {
+                    del_key(KC_TAB);
+                } else {
+                    del_key(KC_Q);
+                    del_mods(MOD_RALT);
+                }
+            }
+            send_keyboard_report();
+            return false;
         case MC_WINT:
             // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
             if (record->tap.count && record->event.pressed) {
