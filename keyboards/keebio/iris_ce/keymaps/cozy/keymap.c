@@ -187,6 +187,8 @@ void toggle_quote_mode(void) {
 static bool taba_was_modded = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // all the keys modified in this way use tap_code() for sending to the computer.
+    // this means they will only send something on tap and then appear to be released immediately, no matter how long you hold them.
     switch (keycode) {
         case MX_TABA:
             // Should behave as Tab when Alt, Ctrl, or Gui is held. Should behave as ä in all other cases (including when just Shift is pressed).
@@ -196,20 +198,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 taba_was_modded = modded;
                 if (modded) {
-                    add_key(KC_TAB);
+                    tap_code(KC_TAB);
                 } else {
-                    add_key(KC_Q);
-                    add_mods(MOD_RALT);
-                }
-            } else {
-                if (taba_was_modded) {
-                    del_key(KC_TAB);
-                } else {
-                    del_key(KC_Q);
-                    del_mods(MOD_RALT);
+                    tap_code16(ALGR(KC_Q));
                 }
             }
-            send_keyboard_report();
             return false;
         case MC_WINT:
             // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
@@ -218,10 +211,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             break;
-        case MX_FUER:
+        case MX_FUER: // obsolete, to be removed!
             if (!record->event.pressed) return false;
             tap_code(KC_F);
-            tap_code16(US_UDIA);  // 16 bits, because the keycode has the Shift bit set.
+            tap_code16(US_UDIA);  // 16 bits, because the keycode has the AltGr bits set.
             tap_code(KC_R);
             return false;
         case MX_QUOT:
