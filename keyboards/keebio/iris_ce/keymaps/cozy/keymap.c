@@ -136,8 +136,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // MX_HAT, MX_BTIC, and MX_TILD here are the 'live' (non-combining) keys (as used in programming languages, among others).
     [L_ALTGR] = LAYOUT(
             KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       MX_HAT , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
-            KC_TAB , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, US_DEG , MX_TILD,
-            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_BTIC, US_SS  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
+            KC_TAB , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_TILD, US_DEG ,
+            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_BTIC, KC_SLSH, KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_PGUP, MS_WHLD, MS_WHLU, KC_PGDN, KC_ENT , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
                                                 KC_LALT, KC_TRNS, KC_ENT ,     KC_NO  , KC_TRNS, KC_RCTL
         ),
@@ -158,7 +158,7 @@ const custom_shift_key_t custom_shift_keys[] = {
   // the live hat ^ of US intl. needs more than one tap, thus we can't have it here. And + has no other home, so put it here, not far from *.
   {KC_6   , KC_PLUS}, // Shift 6 is +
   // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
-  {KC_9   , KC_SLSH}, // Shift 9 is /
+  {KC_9   , US_SS  }, // Shift 9 is ß
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
