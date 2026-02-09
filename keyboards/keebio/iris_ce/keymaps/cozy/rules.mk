@@ -4,4 +4,5 @@ UNICODE_ENABLE = yes
 
 RGB_MATRIX_ENABLE = yes        # per-key RGB
 
-VIA_ENABLE = yes
+# this messes with static keymap updates (from keymap.c)
+# VIA_ENABLE = yes
