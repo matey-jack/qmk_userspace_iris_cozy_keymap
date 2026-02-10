@@ -11,7 +11,7 @@
 // we import the Windows version of the file, since Linux has more key codes defined, but those don't work on Windows.
 #include "keymap_us_international.h"
 
-// for debugging only; needs the QMK Toolbox to receive.
+// for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
 #define VERSION_STRING "Layout ASDR_NILT standalone, rev21.5 duplicated sz, "
