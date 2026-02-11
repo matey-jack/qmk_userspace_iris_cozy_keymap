@@ -14,7 +14,7 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone, rev21.5 duplicated sz, "
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev21.6 both sz on index finger, "
 
 enum layer_names {
     L_BASE,
@@ -155,10 +155,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 const custom_shift_key_t custom_shift_keys[] = {
-  // the live hat ^ of US intl. needs more than one tap, thus we can't have it here. And + has no other home, so put it here, not far from *.
-  {KC_6   , KC_PLUS}, // Shift 6 is +
+  // The live hat ^ of US intl. needs more than one tap, thus we can't have it here.
+  // This is an alternative Shift-layer position for ß, using the same finger as the AltGr+Z mapping.
+  {KC_6   , US_SS  }, // Shift 6 is ß
   // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
-  {KC_9   , US_SS  }, // Shift 9 is ß
+  {KC_9   , KC_PLUS}, // Shift 9 is +
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
