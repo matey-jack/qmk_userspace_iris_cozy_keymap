@@ -1,3 +1,6 @@
+// Copyright 2025 Robert Jack Will
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #define BOTH_SHIFTS_TURNS_ON_CAPS_WORD
 
 // This value is much higher than many of my actual hold-applications.

@@ -11,24 +11,31 @@
 // we import the Windows version of the file, since Linux has more key codes defined, but those don't work on Windows.
 #include "keymap_us_international.h"
 
+// for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
+#include "print.h"
+
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev21.7-anti-tab, "
+
 enum layer_names {
     L_BASE,
     L_COMBINE,
     L_ALTGR,
     L_FN,
 };
-// The AltGr does almost everything that the AltGr level does in the software layout, 
+// The AltGr does almost everything that the AltGr level does in the software layout,
 // therefore we don't need the AltGr modifier on the base layer. (But there's one on the Fn layer.)
 
 // Macros!
 enum custom_keycodes {
     MX_VERS = SAFE_RANGE,
+    MX_TABA,  // Chameleon key for Tab and äÄ.
     MX_TQM ,  // toggle quote mode
     // Next three are for characters that need different key taps on Google Pixel and other devices.
     // Toggled by MX_TQM.
     MX_QUOT,
     MX_ACUT,
     MX_DQUO,
+    MX_HAT,
     // KC_GRV aka US_DGRV works same on both devices, it produces a dead grave.
 
     // The following are not device-dependent, but to save typing effort.
@@ -66,9 +73,9 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
     Layer toggles. With additional tap function.
 */
 #define L2_DEL   LT(L_ALTGR, KC_DEL)
-#define L2_ENT   LT(L_ALTGR, KC_ENT)
+#define L2_INS   LT(L_ALTGR, KC_INS)
 #define L3_ESC   LT(L_FN, KC_ESC)
-#define L3_INS   LT(L_FN, KC_INS)
+#define L3_ENT   LT(L_FN, KC_ENT)
 
 // Since this layer should behave like a combining accent key, it is activated by a one-shot key press.
 #define L_COMB   OSL(L_COMBINE)
@@ -81,6 +88,7 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
     Various convenience keycodes.
 */
 // Mod/Tap for Win and Win+Tab. Need custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
+// Hint to open the start menu: use Ctrl+Esc. (Or L2 + a tab on the Gui key.)
 #define MC_WINT  MT(MOD_RGUI, KC_TAB)
 
 // previous and next word cursor navigation
@@ -106,30 +114,32 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // standard keyboard layer
     [L_BASE] = LAYOUT(
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
-            KC_TAB , KC_Q, KC_W, KC_B, KC_F, L_COMB ,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , KC_PLUS ,
+            MX_TABA, KC_Q, KC_W, KC_B, KC_F, US_ODIA,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , US_UDIA ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
-            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_INS,
-                                    KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_ENT, KC_RCTL
+            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, MC_WINT,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
+                                    KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
-    // Current accented letters: äöü ß àèé çñ æ œ.
-    // Current extras: µ.
-    // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode. 
+    // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
+    // accented letters: äöü ß àèé çñ æ œ.
+    // combining accents: á à ã â ä
+    // other: µ ¼½¾.
+    // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
             TO(0)  , US_QRTR, US_HALF, US_TQTR, KC_NO  , KC_NO  ,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, TO(0)  ,
             KC_NO  , US_AE  , KC_NO  , KC_NO  , MX_FUER, TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
             KC_NO  , US_ADIA, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
             KC_NO  , MX_AGRV, KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
-                                                KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO  
+                                                KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO
         ),
     // Alternate character and navigation layer.
-    // MX_BTIC and MX_TILD here are the 'live' key for programmers.
+    // MX_HAT, MX_BTIC, and MX_TILD here are the 'live' (non-combining) keys (as used in programming languages, among others).
     [L_ALTGR] = LAYOUT(
-            KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       US_DEG , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
-            KC_NO  , KC_NO  , KC_PRWD, KC_UP  , KC_NXWD, KC_NO  ,                       KC_NO  , KC_BSLS, KC_LCBR, KC_RCBR, MX_BTIC, MX_TILD,
-            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       UC_BOT , KC_NO  , KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
-			KC_LCTL, KC_ENT , KC_NO  , KC_PGUP, KC_PGDN, KC_NO  , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
-                                                KC_LALT, KC_NO  , KC_ENT ,     KC_NO  , KC_NO  , KC_RCTL
+            KC_NO  , US_YEN , US_CENT, US_PND , US_EURO, UC_PMIL,                       MX_HAT , KC_PIPE, KC_LBRC, KC_RBRC, US_SECT, KC_DEL ,
+            KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_TILD, US_DEG ,
+            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_BTIC, KC_SLSH, KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
+			KC_LCTL, KC_PGUP, MS_WHLD, MS_WHLU, KC_PGDN, KC_ENT , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
+                                                KC_LALT, KC_TRNS, KC_ENT ,     KC_NO  , KC_TRNS, KC_RCTL
         ),
     // Function layer, like on a laptop.
     // Note that Hue cycles around, while Speed, Saturation and Value clamp at min/max.
@@ -145,15 +155,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 const custom_shift_key_t custom_shift_keys[] = {
-  // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
+  // The live hat ^ of US intl. needs more than one tap, thus we can't have it here.
+  // This is an alternative Shift-layer position for ß, using the same finger as the AltGr+Z mapping.
   {KC_6   , US_SS  }, // Shift 6 is ß
-  {KC_9   , KC_SLSH}, // Shift 9 is /
+  // This replaces the () and <> characters which move to the "stack of parenthesis" on the AltGr layer.
+  {KC_9   , KC_PLUS}, // Shift 9 is +
   {KC_0   , KC_QUES}, // Shift 0 is ?
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
-  // This just swaps + and = (since + is mapped in base layer above).
-  // Now both characters still match the US keycapp, but with the same shift level as on the German Qwertz layout.
-  {KC_PLUS, KC_EQL}, // Shift + is =
 };
 
 // 3 ms still had some dropped letters.
@@ -172,10 +181,30 @@ void toggle_quote_mode(void) {
             break;
     }
     // TODO: flash the LED on letter A, L or S to indicate the new quote mode.
+    // Actually, that's not as important, since I will usually test the quote right after switching.
+    // More useful, however, would be to do the switching on a further-away layer (such as L_COMBINE) to avoid accidental presses.
 }
 
+static bool taba_was_modded = false;
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // all the keys modified in this way use tap_code() for sending to the computer.
+    // this means they will only send something on tap and then appear to be released immediately, no matter how long you hold them.
     switch (keycode) {
+        case MX_TABA:
+            // Should behave as Tab when Alt, Ctrl, or Gui is held. Should behave as ä in all other cases (including when just Shift is pressed).
+            const uint8_t mods    = get_mods();
+            // only need to check the left ones, because the right ones have one extra bit that we can ignore.
+            uint8_t       modded = mods & (MOD_LCTL | MOD_LALT | MOD_LGUI);
+            if (record->event.pressed) {
+                taba_was_modded = modded;
+                if (modded) {
+                    tap_code(KC_TAB);
+                } else {
+                    tap_code16(ALGR(KC_Q));
+                }
+            }
+            return false;
         case MC_WINT:
             // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
             if (record->tap.count && record->event.pressed) {
@@ -183,10 +212,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 return false;
             }
             break;
-        case MX_FUER:
+        case MX_FUER: // obsolete, to be removed!
             if (!record->event.pressed) return false;
             tap_code(KC_F);
-            tap_code16(US_UDIA);  // 16 bits, because the keycode has the Shift bit set.
+            tap_code16(US_UDIA);  // 16 bits, because the keycode has the AltGr bits set.
             tap_code(KC_R);
             return false;
         case MX_QUOT:
@@ -234,6 +263,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     tap_code(KC_QUOT);
                     return false;
             }
+        case MX_HAT:
+            if (!record->event.pressed) return false;
+            switch (current_quote_mode) {
+                case QUOTE_MODE_ANSI:
+                    // implicitly contains Shift
+                    tap_code16(KC_CIRC);
+                    return false;
+                case QUOTE_MODE_LINUX:
+                case QUOTE_MODE_SAMSUNG:
+                    tap_code16(KC_CIRC);
+                    tap_code(KC_SPACE);
+                    return false;
+            }
         case MX_BTIC:
             if (!record->event.pressed) return false;
             tap_code(US_DGRV);   // base layer key
@@ -260,7 +302,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         case MX_VERS:
             if (record->event.pressed) {
-                send_string_with_delay("Layout ASDR_NILT standalone, rev17.1 Shift-6 Esszett, ", SEND_STRING_DELAY_MS);
+                send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
@@ -280,3 +322,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // all other cases to be handled by QMK.
     return true;
 };
+
+void keyboard_post_init_user(void) {
+    debug_enable=true;
+    println(VERSION_STRING);
+    println(__DATE__);
+    //debug_matrix=true;
+    //debug_keyboard=true;
+    //debug_mouse=true;
+}

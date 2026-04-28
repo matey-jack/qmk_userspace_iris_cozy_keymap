@@ -135,7 +135,10 @@ Details of how well everything is production tested:
 # Building this repository
 
 `qmk compile-userspace` doesn't show any error messages when it fails. 
-My workaround is to run `qmk compile -km cozy` instead.
+My workaround is to run `./qmk compile -km cozy` instead. 
+
+This means that I don't need `qmk userspace-add` to set this up, 
+but I do need `qmk config user.overlay_dir=(where the user space is checked out)`.
 
 The Github Actions workflow should run the compile on every push. 
 
