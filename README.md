@@ -27,6 +27,15 @@ So while this Iris keymap is very compatible with the ANSI / ISO fingerings, tho
 
 Web app which shows the rationale behind the letter mapping: https://matey-jack.github.io/key-layout-visualizer/#layout=1&split=1&mapping=cozy-german (I won't go into that here. You can use Qwerty or Colemak or anything else with the rest of my layout. It will even simplify the mapping, because the apostrophe can move back to the right side, not having the finger conflict with T on pinky anymore.)
 
+## Note to self: building on Boxi
+
+In WSL:
+
+       cd qmk_firmware/
+       .venv/bin/qmk compile
+
+The userspace is already linked (I forgot how) and keyboard and keymap are configured.       
+
 ## Some key points of the layout (other than the letter mapping)
  
 Many keys are in the same (relative) position as on a traditional keyboard:

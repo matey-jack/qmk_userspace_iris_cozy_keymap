@@ -14,7 +14,7 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone, rev21.7-anti-tab, "
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev21.8-pure-space, "
 
 enum layer_names {
     L_BASE,
@@ -139,7 +139,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       US_SS  , KC_BSLS, KC_LCBR, KC_RCBR, MX_TILD, US_DEG ,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_BTIC, KC_SLSH, KC_LPRN, KC_RPRN, KC_SCLN, KC_RSFT,
 			KC_LCTL, KC_PGUP, MS_WHLD, MS_WHLU, KC_PGDN, KC_ENT , KC_LGUI,     KC_RGUI, US_MUL , KC_EQL , KC_LT  , KC_GT  , UC_NDSH, KC_INS ,
-                                                KC_LALT, KC_TRNS, KC_ENT ,     KC_NO  , KC_TRNS, KC_RCTL
+                                                KC_LALT, KC_TRNS, KC_TRNS,     KC_NO  , KC_TRNS, KC_RCTL
         ),
     // Function layer, like on a laptop.
     // Note that Hue cycles around, while Speed, Saturation and Value clamp at min/max.
