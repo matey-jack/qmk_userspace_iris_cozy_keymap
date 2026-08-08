@@ -55,12 +55,11 @@ Punctuation and Shift mappings:
  - The ANSI keyboard has 11 punctuation (and accent) keys and 10 more punctuation characters on the Shift+number keys.
  - This keymap has 6 punctuation keys, of which one is actually a one-shot layer activator which behaves like a combining accent key. (For that latter, see below.)
  - I put a lot of thought in choosing the 20 punctuation characters to map to the base and shift layers of those keys (10 on Shift+number, 2×5 on the pure punctuation keys). This allows writing normal text as easily as possible and still finding most of the punctuation in a familiar place (either from US ANSI, German Qwertz, or Cozy special.)
- - In particular, the Shift mapping on numbers 1..8 follows US ANSI, which is also making nice use of the shine-through keycaps that are only available with those US labels. (Parentheses are all collected on the AltGr layer, leaving Shift 9 and 0 free.)
+ - In particular, the Shift mapping on numbers 1..5 and 7..8 follows US ANSI, which is also making nice use of the shine-through keycaps that are only available with those US labels. (Parentheses are all collected on the AltGr layer, leaving Shift 9 and 0 free.)
  - `?` is retained in its German position on Shift+0, which is a great analog to the (US and German) position of `!`.
- - `/` is on Shift+9 as a neighbor of `*` (and similar to its position in the German standard, but allowing the Shifted key labels from 1 to 8 to correspond exactly to US ANSI). 
+ - `+` is on Shift+9 as a neighbor of `*`. 
  - The bottom row triplet `,.-` is exactly as in the German standard, nicely carrying `;:_` on the Shift mapping, which is both logical and comfortable, and lets us dispose with the `;:` key of US ANSI. The Shift labels `,<` and `.>` are still correct, though, because `<` and `>` are mapped to these keys on the AltGr layer (see "stack of parentheses" below).
- - Since we have `-` on the base layer, I also put `+` on the base layer (as in the German standard). 
-   `=` is mapped on the same key (to reuse the US key cap), but on the Shift layer (like in German, so that at least the part of pressing Shift is preserved... and it's also the same finger...)
+ - `=` is mapped on the same layer and next to `<` and `>` for easy typing of `<=`, `>=` and fat arrows.
  - Big thanks goes to Pascal Getreuer for his "custom_shift_keys" module, which makes all this possible! 
    I think that this is an essential tool to help non-American users make good keymaps for their language!
  - The apostrophe/quote key is the standard US shift-pairing, but as a key moves to the left hand to avoid bigram conflicts with the letter T. I recommend swapping this back to the right edge for anyone using a different letter mapping (like Colemak, Qwerty, or other).
@@ -75,13 +74,18 @@ QMK Layers:
  - The Fn activator has non-symmetric positions on both halves. On the left tap/hold with Escape is a great position to hit Function-keys. 
    On the right, bottom row tap/hold with the rarely used Insert key, it's great for volume control, which is placed on the < and > keys. 
 
+One chameleon key to keep German Umlauts in acceptable positions:
+ - ü and ö keep their positions from the 102 keyboard (ü as in Standard German, ö swaps with T in Cozy).
+ - ä needs special treatment because it's key is lost on the smaller board (technically the space is taken over by Shift and ä could move down to the corner, but that's a bad place for a letter and also used as a tap/hold layer key which doesn't work well with letters.)
+ - Therefore, we map ä to the same key as Tab using the Chameleon technique: using the key without modifier or with Shift, yields ä and Ä respectively. Using the key with Alt or Ctrl yields Alt+Tab and Ctrl+Tab. In this way, a lot of the use-cases are covered within existing muscle memory. Only to tap a plain Tab, we'll have to use L3+Tab. This latter did indeed take some time to get used to, but I find it the best compromise compared to more than three other ways in which I tried to map the German Umlauts. (First I tried them on the AltGr layer, but that requires too much coordination of two key presses while typing; then on tap/hold keys (with Ctrl and Fn in the bottom corners and the third letter where the accent key currently sits), but that leads to typos and also those bottom corner diagonal positions are not ergonomic to reach. And finally, I very long trial period of mapping the keys to a special combining accent layer. That worked better than the previous ways, but that extra combining key creates new bigram conflicts which became annoying once I started typing faster again.)
+ - In short, this Chameleon solution has turned out to be the best of all workarounds for having only 56 keys on the keyboard. And it's this and one more missing punctuation key why I think a keyboard with 58 or 60 keys would be better for me. But for now, I use this. 
+
 One-shot layer / combining accents:
- - German has four more letters than English: äöü and ß. Placing them on the Iris keyboard was the hardest task of all. On the Ergodox, which has many more keys, it was easy to shift punctuation around to keep the German letters äöü in a similar position to the German ISO keyboard, but the Iris is just missing two keys. I have tried various positions for those letters: first on the AltGr layer, but that requires too much coordination of two key presses while typing; then on tap/hold keys (with Ctrl and Fn in the bottom corners and the third letter where the accent key currently sits), but that leads to typos and also those bottom corner diagonal positions are not ergonomic to reach.
- - My favorite solution turned out to use the "diaeresis combining accent" key from the US ext. int. layout. This allows typing two keys in sequence, which is exactly what our fingers do when tying words really fast. And it's resilient towards rolling (press/release overlaps), which makes it both fast and comfortable. From this experience came the idea to use the combining accent key for more than three letters. And thus I created a separate layer which simulates the diaeresis combining accent when used with a, o, and u, and then does a lot of other useful stuff, too.
- - In particular, all five combining accent tables from the US ext. intl. layout (Windows version) are accessible on this layer. 
+ - The idea for this came originally from the combining-accent solution to the Umlaut problem. While I didn't like it for Umlauts, I found it very practical to have an additional layer for rarely (but still!) used characters. The problem with extra layers is always that the layer toggle itself takes away valuable mapping space, but since this layer is only rarely used, we can create a space-saving toggle: a one-shot layer triggered by a mapping that itself is on a layer!
+ - In particular, this layer has all five combining accent tables from the US ext. intl. layout (Windows version), so that any character-diacritics combinations can be made. 
    Although this means having to press three keys in sequence to produce a letter like ÿ, it's good to have those rarely needed things available at all ... and in a relatively memorable position. 
- - Since this concept is the newest in my keymap (2025-Sept), I expect a few more tweaks and changes to come in the next couple of weeks.
- - For one thing, I want to make good use of the one-shot activation of this layer (as opposed to the hold+press activation of the AltGr layer which mimics standard Shift and AltGr behavior) and use it for characters that fit well into a typing flow. It wouldn't make sense to add anything on this layer, which is often pressed with another key on the same layer. (For example, I can input `<=` by holding AltGr while pressing `<` and `=`, whereas the one-shot modifier would have to be pressed for each character again.)
+ - To make typing French and Spanish easy, this layer also contains some of the most popular accent-letter pairs directly mapped to the key of the letter; and some others next to that letter. This means that the more laborious way of using the combining accent keys won't be needed in most cases.
+ - Note that it wouldn't make sense to add anything on this layer, which is often pressed with another key on the same layer. For example, I can input `<=` by holding AltGr while pressing `<` and `=`, whereas the one-shot modifier would have to be pressed for each character again. But those cases are already covered on the Base, Shift, and AltGr layers!
 
 "Stack of parentheses" and other goodies on the AltGr layer:
  - This one has a long tradition on my dumb keyboard software layouts. It uses the same fingers for all four kinds of parentheses. 
@@ -117,16 +121,18 @@ Modifiers:
  and some hint at the AltGr key. 
  (For example, € on $, ‰ on %, and similar.) 
  Each key carries up to five functions. 
- Having to spread those across many different layers all over the rest of the keyboard would be a lot of mappings to remember!
+ 
+This is why I wouldn't want one of those "40%" or minimal keyboards which drop the number row and spread its content onto many more layers all over the rest of the keyboard.
 
 ## Status of the design
 
+As of 2026-08, I have been using the entire keymap with only minimal updates for six months every day. 
+And except for the Umlaut definitions, most things have been stable for about 18 months now.
+
+### Status from when I first wrote this ReadMe in 2026-02
+
 When I started with split ergo keyboards, I designed my first key map before even ordering the keyboard... and during the first days of use made a ton of adjustments. 
 (For example, I tried the popular "backdelete on thumb" and found it catastrophic to get used to at a time when I needed it more than ever, because of all the other adjustments.) 
-I am publishing this keymap now, because things have stabilized. 
-However, since the accent layer is brand new, there still might be changes there, and via trickle-down effects also to the AltGr layer.
-(The latter used to be quite cramped, which led to some keys not being in a good position neither for pressing nor for remembering them.
-By moving some characters to the accent layer, the AltGr layer can become nicer.)
 
 Details of how well everything is production tested:
 * The position of basic keys (like Escape, Backspace, Tab, Shift, Enter, Ctrl): I defined those during the early days of my Ergodox use about 11 months ago. 
