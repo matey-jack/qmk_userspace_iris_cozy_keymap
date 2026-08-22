@@ -139,7 +139,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
             TO(0)  , US_QRTR, US_HALF, US_TQTR, US_YEN , US_SECT,                     US_DCIR, US_DIAE, MX_ACUT, US_DGRV, US_DTIL, TO(0)  ,
-            KC_NO  , US_AE  , KC_NO  , KC_NO  , MX_FUER, TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
+            KC_NO  , US_AE  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
             KC_NO  , US_ADIA, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
             KC_NO  , MX_AGRV, KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
                                                 KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO
@@ -194,6 +194,42 @@ void toggle_quote_mode(void) {
     // More useful, however, would be to do the switching on a further-away layer (such as L_COMBINE) to avoid accidental presses.
 }
 
+/*
+    Helpers for the accent keys and their ANSI partners.
+
+    The first two take the keycode of the *plain* key of the US intl. layout, which for three of the five
+    keys implicitly contains a Shift (hence tap_code16 everywhere). All of them return false, so that the
+    cases in process_record_user() can simply `return send_xyz(...);` and tell QMK that we handled the key.
+*/
+
+// The ANSI punctuation, aka the programmer's version of the character.
+static bool send_ansi_punctuation(uint16_t plain_keycode) {
+    tap_code16(plain_keycode);
+    if (current_quote_mode == QUOTE_MODE_WINDOWS) {
+        // The plain key is a dead key here, so it needs a space to commit the standalone character.
+        tap_code(KC_SPACE);
+    }
+    return false;
+}
+
+// The combining accent, aka the dead key.
+static bool send_combining_accent(uint16_t plain_keycode) {
+    if (current_quote_mode == QUOTE_MODE_ANSI) {
+        // The dead keys live on the AltGr level, leaving the ANSI characters where they belong.
+        tap_code16(ALGR(plain_keycode));
+    } else {
+        tap_code16(plain_keycode);
+    }
+    return false;
+}
+
+// Shortcut for a letter with a combining grave accent, see MX_EGRV and MX_AGRV below.
+static bool send_grave_letter(uint16_t letter_keycode) {
+    send_combining_accent(US_DGRV);
+    tap_code(letter_keycode);
+    return false;
+}
+
 static bool taba_was_modded = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -246,84 +282,56 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             Combining accents and their plain counterparts.
 
         * * * * * * * * * * * * * * * * * * * * * * * * * * */
+        // The ANSI punctuation / programmer's characters, in the same order as in the enum.
         case MX_QUOT:
             // Plain ASCII single quote and apostrophe.
             if (!record->event.pressed) return false;
-            switch (current_quote_mode) {
-                case QUOTE_MODE_ANSI:
-                    tap_code(KC_QUOT);
-                    return false;
-                case QUOTE_MODE_WINDOWS:
-                    tap_code(KC_QUOT);
-                    tap_code(KC_SPACE);
-                    return false;
-            }
+            return send_ansi_punctuation(KC_QUOT);
         case MX_DQUO:
-        // This is currently unused code, since the shift layer was removed.
-        // Instead the MX_QUOT above will be used with the Shift bit passed implicitly.
-        // We keep it anyhow, in case that we want to map this key to another layer.
+            // This is currently unused code, since the shift layer was removed.
+            // Instead the MX_QUOT above will be used with the Shift bit passed implicitly.
+            // We keep it anyhow, in case that we want to map this key to another layer.
             if (!record->event.pressed) return false;
-            switch (current_quote_mode) {
-                case QUOTE_MODE_ANSI:
-                    // need tap_code16, because it actually needs to press and hold Shift as part of this virtual key code.
-                    tap_code16(KC_DQUO);
-                    return false;
-                case QUOTE_MODE_WINDOWS:
-                    tap_code16(KC_DQUO);
-                    tap_code(KC_SPACE);
-                    return false;
-            }
-        case MX_ACUT:
-            if (!record->event.pressed) return false;
-            switch (current_quote_mode) {
-                case QUOTE_MODE_ANSI:
-                    tap_code16(ALGR(KC_QUOT));
-                    return false;
-                case QUOTE_MODE_WINDOWS:
-                    tap_code(KC_QUOT);
-                    return false;
-            }
-        case MX_HAT:
-            if (!record->event.pressed) return false;
-            switch (current_quote_mode) {
-                case QUOTE_MODE_ANSI:
-                    // implicitly contains Shift
-                    tap_code16(KC_CIRC);
-                    return false;
-                case QUOTE_MODE_WINDOWS:
-                    tap_code16(KC_CIRC);  // Same code as US_DCIR, but behaves as combining key.
-                    tap_code(KC_SPACE);
-                    return false;
-            }
-        case MX_CIRC:
-            // TODO!
+            return send_ansi_punctuation(KC_DQUO); // implicit Shift
         case MX_BTIC:
             if (!record->event.pressed) return false;
-            // TODO: in ANSI mode, only the first key is needed, no?!
-            tap_code(US_DGRV);   // base layer key
-            tap_code(KC_SPACE);
-            return false;
+            return send_ansi_punctuation(KC_GRV);
         case MX_TILD:
             if (!record->event.pressed) return false;
-            // TODO: in ANSI mode, only the first key is needed, no?!
-            tap_code16(US_DTIL); // implicit Shift
-            tap_code(KC_SPACE);
-            return false;
+            return send_ansi_punctuation(KC_TILD); // implicit Shift
+        case MX_HAT:
+            if (!record->event.pressed) return false;
+            return send_ansi_punctuation(KC_CIRC); // implicit Shift
+
+        // The combining accents, same key order as their programmer's versions above.
+        // Note that the US_* key codes despite their names are alias of the same numeric codes as the KC_* ones above.
+        // The difference in behavior is entirely in the function that is called.
+        case MX_ACUT:
+            if (!record->event.pressed) return false;
+            return send_combining_accent(US_ACUT);
+        case MX_DIA:
+            if (!record->event.pressed) return false;
+            return send_combining_accent(US_DIAE); // implicit Shift
+        case MX_GRV:
+            if (!record->event.pressed) return false;
+            return send_combining_accent(US_DGRV);
+        case MX_CTIL:
+            if (!record->event.pressed) return false;
+            return send_combining_accent(US_DTIL); // implicit Shift
+        case MX_CIRC:
+            if (!record->event.pressed) return false;
+            return send_combining_accent(US_DCIR); // implicit Shift
 
         // Shortcuts to two very common accented letters that (unlike e-acute and n-tilde) aren't already defined in the US int'l character map.
         case MX_EGRV:
             if (!record->event.pressed) return false;
             // This is a shortcut that works for the minuscule è only, because the presence of a pressed Shift key transforms the accent into a tilde.
             // If the capital version is ever needed (which it isn't in any language I am writing), then it can be made by pressing the combining sequence manually.
-            tap_code(US_DGRV);
-            tap_code(KC_E);
-            return false;
+            return send_grave_letter(KC_E);
         case MX_AGRV:
             if (!record->event.pressed) return false;
             // This is a shortcut that works for the minuscule à only; see MX_EGRV above.
-            tap_code(US_DGRV);
-            tap_code(KC_A);
-            return false;
+            return send_grave_letter(KC_A);
     }
     // all other cases to be handled by QMK.
     return true;
