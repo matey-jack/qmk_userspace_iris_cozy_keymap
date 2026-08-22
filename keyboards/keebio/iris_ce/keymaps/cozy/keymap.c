@@ -27,21 +27,30 @@ enum layer_names {
 
 // Macros!
 enum custom_keycodes {
-    MX_VERS = SAFE_RANGE,
+    MX_VERS = SAFE_RANGE, // ugly hack: prints the firmware version.
     MX_TABA,  // Chameleon key for Tab and äÄ.
-    MX_TQM ,  // toggle quote mode
-    // Next three are for characters that need different key taps on Google Pixel and other devices.
-    // Toggled by MX_TQM.
-    MX_QUOT,
-    MX_ACUT,
-    MX_DQUO,
-    MX_HAT,
-    // KC_GRV aka US_DGRV works same on both devices, it produces a dead grave.
+    MX_TQM ,  // toggle quote mode: adapts quote and accent keys between ANSI and Windows International mode.
 
-    // The following are not device-dependent, but to save typing effort.
-    MX_BTIC,  // "live" grave accent, doubling as "backtick" in programming.
-    MX_TILD,  // "live" tilde for the Unix Shell...
-    MX_FUER,  // Avoids same-finger trigram (f¨ur)
+    // Ironically the "grave tilde" and "6 circumflex" keys were added to typewriters to write combining accents.
+    // But early computers appropriated those characters to create some concise programming syntax.
+    // When combining accents were needed later, some systems introduced them separately on the AltGr layer,
+    // while others replaced the programmer's characters with those combining accents.
+    // Now we have to switch the keyboard between both... see quote_mode_t below.
+
+    // Keys that should produce the ANSI characters: quotes and programmer's punctuation.
+    MX_QUOT,  // single quote which in ANSI is the same as the apostrophe
+    MX_DQUO,  // double quote
+    MX_BTIC,  // programmer's "backtick", the non-combining grave accent.
+    MX_TILD,  // programmer's tilde for the Unix Shell...
+    MX_HAT,   // programmer's circumflex
+
+    // Combining accents, aka dead keys, which only work on internationalized layouts (ANSI-compatible or not).
+    // Same order as their programmer's versions above.
+    MX_ACUT, // acute
+    MX_DIA,  // diaeresis
+    MX_GRV,  // grave
+    MX_CTIL, // combining tilde
+    MX_CIRC, // circumflex
 
     // We could do the following two with Unicode, but someone said that Unicode is less reliable...
     MX_EGRV,
@@ -49,25 +58,23 @@ enum custom_keycodes {
 };
 
 typedef enum {
-    // this works for the standard US ANSI keyboard on all platforms,
-    // but on Google Pixel 4a it even works with US ext. intl.
-    // This is great and all OS' should do it like this!
-    // And I am happy that I have independently invented this in my bespoke/support layout :-D
+    // This works for the standard US ANSI keyboard on all platforms.
+    // It also works with xkb's us(altgr-intl) in which case it also includes dead accents without redefining any of the ANSI keys.
+    // (Google Pixel phones seem to use this version of the US intl keymap as well!)
     QUOTE_MODE_ANSI,
-    // This is for US ext intl Linux as in QMK's header file. (Currently not used.)
-    QUOTE_MODE_LINUX,
-    // Maybe I should call it quote mode Windows, because it seems to be the same and Windows is the better known implementation.
-    QUOTE_MODE_SAMSUNG,
+    // Linux also offers a variant of us(intl) which works like this, althoug GTK somehow messes with the compose table.
+    // But it's the preferred choice for a computer that runs Linux and Windows at the same time, one of them in a VM or via RDP.0
+    // My Samsung Android tablets also use this.
+    QUOTE_MODE_WINDOWS,
 } quote_mode_t;
 
 const char *const quote_mode_names[] = {
     [QUOTE_MODE_ANSI] = "ANSI",
-    [QUOTE_MODE_LINUX] = "Linux",
-    [QUOTE_MODE_SAMSUNG] = "Samsung",
+    [QUOTE_MODE_WINDOWS] = "Samsung",
 };
 
 // personal preference for my current main devices (Windows PC + Android Tablet).
-quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
+quote_mode_t current_quote_mode = QUOTE_MODE_WINDOWS;
 
 /*
     Layer toggles. With additional tap function.
@@ -106,7 +113,6 @@ quote_mode_t current_quote_mode = QUOTE_MODE_SAMSUNG;
 #define UC_PMIL UC(0x2030) // per mille sign ‰
 #define UC_NDSH UC(0x2013) // en-dash –  // interestingly, Windows also types that with G(KC_MINS) 🤯
 #define UC_oe   UC(0x0153) // œ fun-fact: the sad story of why this is not in Latin-1 and thus not in the OS' keymap: https://en.wikipedia.org/wiki/ISO/IEC_8859-1
-#define UC_BOT  UC(0x22A5) // bottom ⊥ – doesn't work :(
 /*
     Comment for visually separating the actual keymap.
 */
@@ -171,12 +177,9 @@ const int SEND_STRING_DELAY_MS = 10;
 void toggle_quote_mode(void) {
     switch (current_quote_mode) {
         case QUOTE_MODE_ANSI:
-        //     current_quote_mode = QUOTE_MODE_LINUX;
-        //     break;
-        case QUOTE_MODE_LINUX:
-            current_quote_mode = QUOTE_MODE_SAMSUNG;
+            current_quote_mode = QUOTE_MODE_WINDOWS;
             break;
-        case QUOTE_MODE_SAMSUNG:
+        case QUOTE_MODE_WINDOWS:
             current_quote_mode = QUOTE_MODE_ANSI;
             break;
     }
@@ -191,6 +194,25 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // all the keys modified in this way use tap_code() for sending to the computer.
     // this means they will only send something on tap and then appear to be released immediately, no matter how long you hold them.
     switch (keycode) {
+        case MC_WINT:
+            // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
+            if (record->tap.count && record->event.pressed) {
+                tap_code16(RWIN(KC_TAB));
+                return false;
+            }
+            break;
+
+        case MX_VERS:
+            if (record->event.pressed) {
+                send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
+                send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
+                send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
+                send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
+                send_string_with_delay("\n", SEND_STRING_DELAY_MS);
+            } else {
+                // when keycode is released
+            }
+            return false;
         case MX_TABA:
             // Should behave as Tab when Alt, Ctrl, or Gui is held. Should behave as ä in all other cases (including when just Shift is pressed).
             const uint8_t mods    = get_mods();
@@ -205,49 +227,42 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 }
             }
             return false;
-        case MC_WINT:
-            // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
-            if (record->tap.count && record->event.pressed) {
-                tap_code16(RWIN(KC_TAB));
-                return false;
+        case MX_TQM:
+            if (record->event.pressed) {
+                toggle_quote_mode();
+            } else {
+                // when keycode is released
             }
-            break;
-        case MX_FUER: // obsolete, to be removed!
-            if (!record->event.pressed) return false;
-            tap_code(KC_F);
-            tap_code16(US_UDIA);  // 16 bits, because the keycode has the AltGr bits set.
-            tap_code(KC_R);
             return false;
+
+        /* * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+            Combining accents and their plain counterparts.
+
+        * * * * * * * * * * * * * * * * * * * * * * * * * * */
         case MX_QUOT:
+            // Plain ASCII single quote and apostrophe.
             if (!record->event.pressed) return false;
             switch (current_quote_mode) {
                 case QUOTE_MODE_ANSI:
                     tap_code(KC_QUOT);
                     return false;
-                case QUOTE_MODE_LINUX:
-                    tap_code16(ALGR(KC_QUOT));
-                    return false;
-                case QUOTE_MODE_SAMSUNG:
-                    // it's a dead key with only one mapping, namely the key itself.
+                case QUOTE_MODE_WINDOWS:
                     tap_code(KC_QUOT);
                     tap_code(KC_SPACE);
                     return false;
             }
         case MX_DQUO:
-        // This is all unused code, since the shift layer was removed.
+        // This is currently unused code, since the shift layer was removed.
         // Instead the MX_QUOT above will be used with the Shift bit passed implicitly.
+        // We keep it anyhow, in case that we want to map this key to another layer.
             if (!record->event.pressed) return false;
             switch (current_quote_mode) {
                 case QUOTE_MODE_ANSI:
                     // need tap_code16, because it actually needs to press and hold Shift as part of this virtual key code.
                     tap_code16(KC_DQUO);
                     return false;
-                case QUOTE_MODE_LINUX:
-                    // Explicit AltGr, implicit Shift.
-                    tap_code16(ALGR(KC_DQUO));
-                    return false;
-                case QUOTE_MODE_SAMSUNG:
-                    // it's a dead key with only one mapping, namely the key itself.
+                case QUOTE_MODE_WINDOWS:
                     tap_code16(KC_DQUO);
                     tap_code(KC_SPACE);
                     return false;
@@ -258,8 +273,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 case QUOTE_MODE_ANSI:
                     tap_code16(ALGR(KC_QUOT));
                     return false;
-                case QUOTE_MODE_LINUX:
-                case QUOTE_MODE_SAMSUNG:
+                case QUOTE_MODE_WINDOWS:
                     tap_code(KC_QUOT);
                     return false;
             }
@@ -270,53 +284,39 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     // implicitly contains Shift
                     tap_code16(KC_CIRC);
                     return false;
-                case QUOTE_MODE_LINUX:
-                case QUOTE_MODE_SAMSUNG:
-                    tap_code16(KC_CIRC);
+                case QUOTE_MODE_WINDOWS:
+                    tap_code16(KC_CIRC);  // Same code as US_DCIR, but behaves as combining key.
                     tap_code(KC_SPACE);
                     return false;
             }
+        case MX_CIRC:
+            // TODO!
         case MX_BTIC:
             if (!record->event.pressed) return false;
+            // TODO: in ANSI mode, only the first key is needed, no?!
             tap_code(US_DGRV);   // base layer key
             tap_code(KC_SPACE);
             return false;
         case MX_TILD:
             if (!record->event.pressed) return false;
+            // TODO: in ANSI mode, only the first key is needed, no?!
             tap_code16(US_DTIL); // implicit Shift
             tap_code(KC_SPACE);
             return false;
+
+        // Shortcuts to two very common accented letters that (unlike e-acute and n-tilde) aren't already defined in the US int'l character map.
         case MX_EGRV:
             if (!record->event.pressed) return false;
-            // TODO: handle the Shift case, because is currently transforms DGRV into DTIL!
-            // OTOH, the capital version of this is almost never used, and can be made with the explicit accent key anyway.
+            // This is a shortcut that works for the minuscule è only, because the presence of a pressed Shift key transforms the accent into a tilde.
+            // If the capital version is ever needed (which it isn't in any language I am writing), then it can be made by pressing the combining sequence manually.
             tap_code(US_DGRV);
             tap_code(KC_E);
             return false;
         case MX_AGRV:
             if (!record->event.pressed) return false;
-            // TODO: handle the Shift case, because is currently transforms DGRV into DTIL!
-            // OTOH, the capital version of this is almost never used, and can be made with the explicit accent key anyway.
+            // This is a shortcut that works for the minuscule à only; see MX_EGRV above.
             tap_code(US_DGRV);
             tap_code(KC_A);
-            return false;
-        case MX_VERS:
-            if (record->event.pressed) {
-                send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
-                send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
-                send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
-                send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
-                send_string_with_delay("\n", SEND_STRING_DELAY_MS);
-            } else {
-                // when keycode is released
-            }
-            return false;
-        case MX_TQM:
-            if (record->event.pressed) {
-                toggle_quote_mode();
-            } else {
-                // when keycode is released
-            }
             return false;
     }
     // all other cases to be handled by QMK.
