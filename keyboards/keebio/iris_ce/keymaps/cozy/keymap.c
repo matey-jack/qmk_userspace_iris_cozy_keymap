@@ -67,6 +67,12 @@ typedef enum {
     // My Samsung Android tablets also use this.
     QUOTE_MODE_WINDOWS,
 } quote_mode_t;
+/*
+  What keycodes need to be sent to create the reuired character or trigger the required compose table in each mode:
+   - ANSI: plain keycode creates the ANSI punctuation / programmer's version; AltGr+keycode triggers the accent combiner.
+   - WINDOWS: plain keycode triggers the accent combiner; keycode followed by space inserts the plain ANSI character.
+   Note that in three cases the "plain keycode" includes a pressed shift key.
+*/
 
 const char *const quote_mode_names[] = {
     [QUOTE_MODE_ANSI] = "ANSI",
@@ -191,8 +197,8 @@ void toggle_quote_mode(void) {
 static bool taba_was_modded = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    // all the keys modified in this way use tap_code() for sending to the computer.
-    // this means they will only send something on tap and then appear to be released immediately, no matter how long you hold them.
+    // All the keys modified in this way use tap_code() for sending to the computer.
+    // This means they will only send something on tap and then appear to be released immediately, no matter how long you hold them.
     switch (keycode) {
         case MC_WINT:
             // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
