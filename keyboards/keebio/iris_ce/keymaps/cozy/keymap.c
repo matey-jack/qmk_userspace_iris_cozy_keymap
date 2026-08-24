@@ -14,7 +14,7 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone, rev22-accent-cleanup"
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev22.1-accent-cleanup-and-winkey-fix"
 
 enum layer_names {
     L_BASE,
@@ -128,7 +128,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             L3_ESC , KC_1, KC_2, KC_3, KC_4, KC_5   ,                     KC_6   , KC_7, KC_8   , KC_9  , KC_0   , KC_BSPC,
             MX_TABA, KC_Q, KC_W, KC_B, KC_F, US_ODIA,                     KC_Z   , KC_K, KC_U   , KC_O  , KC_P   , US_UDIA ,
             KC_LSFT, KC_A, KC_S, KC_D, KC_R, KC_G   ,                     KC_H   , KC_N, KC_I   , KC_L  , KC_T   , KC_RSFT,
-            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT,MOD_RGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
+            KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_RGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
     // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
