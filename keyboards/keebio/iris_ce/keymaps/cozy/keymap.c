@@ -14,7 +14,7 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone, rev21.10-pure-left-gui"
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev22-accent-cleanup"
 
 enum layer_names {
     L_BASE,
