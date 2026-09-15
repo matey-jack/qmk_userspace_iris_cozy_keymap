@@ -147,6 +147,31 @@ Details of how well everything is production tested:
 * The accent layer: Umlauts äöü and ß are unlikely to change, while everything else still needs production usage to evaluate its effectiveness.
 * The Letter mapping (just FYI, since probably few people come for that): I've been using this for more than ten years, and after recently trying to improve it without finding any worthwhile improvements, I will probably use it until the end of my life.
 
+# The `cozy_de` variant: standard German OS layout, no custom code
+
+`keyboards/keebio/iris_ce/keymaps/cozy_de` is a second keymap with the same physical layout,
+the same four layers and the same QMK keycodes as `cozy`, but with two differences:
+
+ - It assumes that the computer runs the **standard German keyboard layout**
+   (xkb's `de(basic)`, aka Windows' "German (Germany)") instead of US extended international.
+ - It contains **no custom code and no community modules**.
+   The `getreuer/custom_shift_keys` module is replaced by [QMK's built-in Key Overrides](https://docs.qmk.fm/features/key_overrides),
+   and the only `process_record_user()` case left is the one that types the firmware version.
+
+Because the German layout already has ä, ö, ü and ß as normal keys, several of the workarounds
+of `cozy` are not needed here: the "chameleon" Tab/ä key is a plain ä key,
+and the ANSI/Windows "quote mode" switch is gone, since the OS layout now decides
+what the accent keys do. In exchange, some characters of `cozy` have no equivalent in `de(basic)`
+and are mapped to `KC_NO`; the head of `cozy_de/keymap.c` lists all of them with the reason.
+
+The key overrides restore the Cozy Shift mapping on top of the German layout.
+The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`, `Shift 5 → %`,
+`Shift , → ;`, `Shift . → :` and `Shift - → _`; the other eight pairings
+(`@ # ß & * + ?` on the number row and `"` on the apostrophe key) are made by a key override each.
+
+A copy of the xkb sources of the assumed OS layout is in `reference/xkb/`,
+so that the AltGr mappings used in the keymap can be verified; see the README there.
+
 # Building this repository
 
 `qmk compile-userspace` doesn't show any error messages when it fails. 
