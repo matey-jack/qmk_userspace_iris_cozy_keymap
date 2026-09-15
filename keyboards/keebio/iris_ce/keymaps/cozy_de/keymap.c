@@ -82,8 +82,8 @@
                    the OS layout now decides what the accent keys do.
 
     MX_TABA, the "chameleon" Tab/ä key, keeps its behavior without custom code: it is a plain
-    DE_ADIA (ä/Ä), and the ko_adia_tab key override further down turns Ctrl+ä and Alt+ä into
-    Ctrl+Tab and Alt+Tab. An unmodified Tab is on the L_ALTGR layer, as in `cozy`.
+    DE_ADIA (ä/Ä), and the ko_adia_tab key override further down makes it a Tab whenever Ctrl, Alt
+    or Gui is held. An unmodified Tab is on the L_ALTGR layer, as in `cozy`.
 */
 
 enum layer_names {
@@ -217,23 +217,23 @@ const key_override_t ko_0_ques = ko_make_basic(MOD_MASK_SHIFT, KC_0, DE_QUES); /
 const key_override_t ko_quot_dquo = ko_make_basic(MOD_MASK_SHIFT, DE_QUOT, DE_DQUO);
 
 /*
-    The "chameleon" ä key: Ctrl+ä is Ctrl+Tab and Alt+ä is Alt+Tab, while plain ä and Shift+ä stay
-    ä and Ä. This is what MX_TABA did in custom code, and it keeps Alt+Tab in its traditional place
-    now that the ä key sits where Tab used to be.
+    The "chameleon" ä key: with Ctrl, Alt or Gui held it becomes Tab, so that Ctrl+Tab, Alt+Tab and
+    Win+Tab keep working from the key that used to be Tab. Plain ä and Shift+ä stay ä and Ä.
+    This is exactly what MX_TABA did in custom code (which also tested for those three modifiers).
 
     This one cannot use ko_make_basic(), which would suppress the trigger modifier and re-add it as
     part of the replacement keycode: those "weak" mods are dropped every time the replacement is
-    unregistered, so the app switcher would close between two taps of ä. Suppressing nothing instead
-    leaves the physically held Ctrl / Alt in the keyboard report for as long as it is really down,
-    so holding Alt and tapping ä repeatedly walks through the window list as it should.
+    unregistered, so the window switcher would close between two taps of ä. Suppressing nothing
+    instead leaves the physically held modifier in the keyboard report for as long as it is really
+    down, so holding Alt (or Win) and tapping ä repeatedly walks through the window list.
 
     A held Shift is passed through the same way, which makes Ctrl+Shift+ä a Ctrl+Shift+Tab.
 */
 const key_override_t ko_adia_tab = {
     .trigger           = DE_ADIA,
-    .trigger_mods      = MOD_MASK_CA, // Ctrl or Alt ...
+    .trigger_mods      = MOD_MASK_CAG, // Ctrl, Alt or Gui ...
     .options           = ko_options_all_activations | ko_option_one_mod, // ... any one of them suffices
-    .suppressed_mods   = 0,           // keep the real modifier down, see above
+    .suppressed_mods   = 0,            // keep the real modifier down, see above
     .negative_mod_mask = 0,
     .replacement       = KC_TAB,
     .layers            = ~0,

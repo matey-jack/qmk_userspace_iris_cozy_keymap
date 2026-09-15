@@ -169,9 +169,9 @@ The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`,
 (`@ # ß & * + ?` on the number row and `"` on the apostrophe key) are made by a key override each.
 
 One more key override keeps the "chameleon" ä key working: plain and with Shift it types ä and Ä,
-while `Ctrl+ä` and `Alt+ä` become `Ctrl+Tab` and `Alt+Tab`, so `Alt+Tab` stays the gesture it
-always was. Unlike the Shift overrides, this one suppresses no modifier, which is what lets you
-hold Alt and tap ä several times to walk through the window list.
+while holding Ctrl, Alt or Win turns it into Tab, so `Ctrl+Tab`, `Alt+Tab` and `Win+Tab` stay the
+gestures they always were. Unlike the Shift overrides, this one suppresses no modifier, which is
+what lets you hold Alt (or Win) and tap ä several times to walk through the window list.
 
 The right thumb key is a plain `Win+Tab` (expose / task view) rather than a Mod-Tap;
 the Gui modifier itself sits on the left thumb key, unchanged from `cozy`.
