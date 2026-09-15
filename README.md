@@ -181,17 +181,22 @@ modifiers before sending their dead key, because in the German layout a held Shi
 ´ into ` (silently making è out of é), and would push the AltGr dead keys onto E1's unassigned
 AltGr+Shift level, where they produce nothing at all.
 
-¼ ½ ¾ ¢ £ ‰ æ œ ø are not single keys on E1: it keeps them on level 5, behind an
-`ISO_Level5_Latch`. That latch sits on row 1 of `L_COMBINE` alongside the dead keys, as `DE_LVL5`,
-and like a dead key it applies to the next keystroke — `DE_LVL5` then `1` gives ¼, `DE_LVL5` then
-`ä` gives æ, and so on; the comment block at the head of `cozy_de/keymap.c` lists each one.
-This is the only part of the keymap expected to be **Linux-only**, since the Windows E1
-implementation is not known to have a Level-5 latch. (ø also has a Windows-safe route:
-the dead stroke followed by `o`. ¥ is gone from E1 altogether and is not typable at all.)
+¼ ½ ¾ ‰ æ œ ø are not single keys on E1: it keeps them on level 5, behind an `ISO_Level5_Latch`.
+That latch is on the `L_ALTGR` layer as `DE_LVL5`, in the position that mirrors the `L_COMB`
+one-shot layer key on the other half of the board — the two are the same idea, one implemented in
+the firmware and one in the xkb config. Like a dead key it applies to the next keystroke, so
+`DE_LVL5` then `1` gives ¼, `DE_LVL5` then `ä` gives æ, and so on; the comment block at the head of
+`cozy_de/keymap.c` lists each one. This is the only part of the keymap expected to be
+**Linux-only**, since the Windows E1 implementation is not known to have a Level-5 latch.
+(ø also has a Windows-safe route: the dead stroke followed by `o`.)
 
-£ is the exception that gets its own macro, on the `L_ALTGR` layer where `cozy` has it: its
-second keystroke is the ´ key, which is not on the base layer, so typing it by hand would mean
-re-entering the one-shot layer half way through the sequence.
+The two currency signs ¢ and £ get their own macros instead, in the `L_ALTGR` positions `cozy`
+uses. £ needs one: its second keystroke is the ´ key, which is not on the base layer, so typing
+it by hand would mean changing layers half way through the sequence.
+
+Two more macros, `MX_HAT` and `MX_BTIC`, produce the **live** (non-combining) `^` and `` ` ``.
+The German layout has no key for either — both are dead keys — so the macros add the trailing
+space that turns a dead key into its spacing character.
 
 The key overrides restore the Cozy Shift mapping on top of the German layout.
 The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`, `Shift 5 → %`,

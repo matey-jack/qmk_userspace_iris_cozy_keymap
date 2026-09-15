@@ -49,10 +49,11 @@
     at the end of this file clear the modifiers before sending their dead key.
 
     Levels 5 and 6 are reached through the Level-5 latch, which E1 puts on AltGr+F and which this
-    keymap exposes as DE_LVL5 next to the dead keys on L_COMBINE. Like a dead key, it applies to
-    the next keystroke only. It is the one keycode here that is *not* expected to work on Windows,
-    whose E1 implementation is not known to have an equivalent; everything reachable only through
-    it is listed separately further down.
+    keymap exposes as DE_LVL5 on L_ALTGR, mirroring the L_COMB key on the other half of the board:
+    both are one-shot layers that apply to the next keystroke only, one implemented in the
+    firmware, the other in the xkb config. DE_LVL5 is the one keycode here that is *not* expected
+    to work on Windows, whose E1 implementation is not known to have an equivalent; everything
+    reachable only through it is listed separately further down.
 */
 // Dead keys. `de(basic)` has only the acute, grave and circumflex (which E1 keeps in place, so
 // `DE_ACUT`, `DE_GRV` and `DE_CIRC` from `keymap_german.h` still apply) plus a diaeresis on
@@ -73,38 +74,27 @@
 #define DE_NDSH ALGR(DE_N)        // – n-dash          <AB06> level 3: endash
 
 /*
-    Keycodes of the `cozy` keymap that are not a single keycode on `de(e1)` and are therefore
-    mapped to KC_NO here. (Sorted the way they appear in the layers below.)
+    Characters of the `cozy` keymap that are not a single keycode on `de(e1)` and are therefore
+    absent from the layers below. Sorted by how they are typed now.
 
-    Almost all of them are still typable, just as two keystrokes: E1 keeps them on level 5,
-    behind the DE_LVL5 latch that sits with the dead keys on row 1 of L_COMBINE. Tapping DE_LVL5
-    leaves the one-shot layer, so the second keystroke comes from the base layer.
+    All of them sit on E1's level 5, reached by tapping DE_LVL5 (the Level-5 latch, on L_ALTGR)
+    and then the key named here. Since L_ALTGR is a held layer, that means releasing the layer key
+    between the two keystrokes, so that the second one comes from the base layer. This is the part
+    of the keymap expected to be Linux-only: the Windows E1 implementation is not known to have a
+    Level-5 latch, and nothing else here depends on it.
 
-    Note that this is the part of the keymap that is expected to be Linux-only, since the Windows
-    E1 implementation is not known to have a Level-5 latch. Nothing else here depends on it.
-
-    On the L_COMBINE layer:
-     - US_QRTR ¼, US_HALF ½, US_TQTR ¾ – DE_LVL5 then 1, 2 or 3.  `de(basic)` inherited ¼ and ½
-                                    from `latin(basic)` on level 3; E1 moves all three fractions to level 5.
-     - US_YEN  ¥ – not typable: E1 drops the yen sign from every level.
-                    `de(basic)` had it on AltGr+Shift+Z.
-     - US_AE   æ – DE_LVL5 then ä.  `de(basic)` had it on AltGr+A, which in E1 is the Compose key.
-     - US_OSTR ø – DE_LVL5 then o, or DE_DSTR (row 1 of this layer) then o, which also works
-                    on Windows and additionally gives đ and ł.  `de(basic)` had ø on AltGr+O,
+    DE_LVL5, then:
+     - 1, 2 or 3  – US_QRTR ¼, US_HALF ½, US_TQTR ¾.  `de(basic)` inherited ¼ and ½ from
+                    `latin(basic)` on level 3; E1 moves all three fractions to level 5.
+     - 5          – UC_PMIL ‰.  E1 does have the per mille sign; `de(basic)` did not.
+     - ä          – US_AE æ.  `de(basic)` had it on AltGr+A, which in E1 is the Compose key.
+     - ö          – UC_oe œ, which `cozy` typed via QMK Unicode input.
+     - o          – US_OSTR ø.  DE_DSTR (row 1 of L_COMBINE) then o does the same, works on
+                    Windows too, and additionally gives đ and ł.  `de(basic)` had ø on AltGr+O,
                     which in E1 is dead_abovering.
-     - UC_oe   œ – DE_LVL5 then ö; was typed via QMK Unicode input in `cozy`.
 
-    On the L_ALTGR layer:
-     - US_CENT ¢ – DE_LVL5 then c.  `de(basic)` had it on AltGr+C via `latin(type4)`.
-     - UC_PMIL ‰ – DE_LVL5 then 5.  E1 does have the per mille sign; `de(basic)` did not.
-     - MX_HAT  ^ – in E1 the ^ key is still dead_circumflex, so a *live* ^ needs a trailing space.
-                    The dead version is on L_COMBINE as DE_CIRC.
-     - MX_BTIC ` – likewise: Shift+´ is dead_grave, there is no live backtick.
-                    The dead version is on L_COMBINE as DE_GRV.
-
-    On the L_FN layer:
-     - MX_TQM    – the ANSI/Windows "quote mode" switch is gone together with the custom code;
-                   the OS layout now decides what the accent keys do.
+    Not a character, and gone for good: MX_TQM, the ANSI/Windows "quote mode" switch, disappeared
+    together with the custom code it needed — the OS layout now decides what the accent keys do.
 
     MX_TABA, the "chameleon" Tab/ä key, keeps its behavior without custom code: it is a plain
     DE_ADIA (ä/Ä), and the ko_adia_tab key override further down makes it a Tab whenever Ctrl, Alt
@@ -129,20 +119,28 @@ enum layer_names {
     the L_COMBINE layer followed by a shifted letter, so these macros never deal with Shift
     at all — see send_prefixed_key() below.
 
-    The sixth is £. Of all the characters that E1 hides behind the Level-5 latch it is the only
-    one that gets a macro, because its second keystroke is the ´ key, which lives on L_COMBINE
-    rather than on the base layer: typing it by hand would mean re-entering the one-shot layer
-    in the middle of the sequence. The others end on a base-layer key and need no help.
+    MX_HAT and MX_BTIC are the *live* (non-combining) ^ and `, which the German layout has no key
+    for — both are dead keys there, and a dead key followed by a space yields its spacing form.
+
+    MX_CENT and MX_PND are the two currency signs that E1 keeps behind the Level-5 latch, so they
+    are Linux-only in the same way the latch is. £ needs the macro most: its second keystroke is
+    the ´ key, which is not on the base layer, so typing it by hand would mean re-entering a layer
+    in the middle of the sequence. ¢ simply has a free spot waiting for it.
+
+    All of them sit where the `cozy` keymap puts them.
 */
 enum custom_keycodes {
     MX_VERS = SAFE_RANGE, // ugly hack: prints the firmware version.
 
-    MX_EACU,  // é   dead acute    + e
-    MX_EGRV,  // è   dead grave    + e
-    MX_AGRV,  // à   dead grave    + a
-    MX_NTIL,  // ñ   dead tilde    + n   (needs E1; `de(basic)` has no dead tilde)
-    MX_CCED,  // ç   dead cedilla  + c   (needs E1; `de(basic)` hides the cedilla on AltGr+´)
-    MX_PND ,  // £   level-5 latch + ´   (Linux only, like everything behind the latch)
+    MX_EACU,  // é   dead acute      + e
+    MX_EGRV,  // è   dead grave      + e
+    MX_AGRV,  // à   dead grave      + a
+    MX_NTIL,  // ñ   dead tilde      + n   (needs E1; `de(basic)` has no dead tilde)
+    MX_CCED,  // ç   dead cedilla    + c   (needs E1; `de(basic)` hides the cedilla on AltGr+´)
+    MX_HAT ,  // ^   dead circumflex + space   (the live, non-combining version)
+    MX_BTIC,  // `   dead grave      + space   (likewise)
+    MX_CENT,  // ¢   level-5 latch   + c   (Linux only, like everything behind the latch)
+    MX_PND ,  // £   level-5 latch   + ´   (likewise)
 };
 
 /*
@@ -197,13 +195,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //                    plus the cedilla and the stroke on row 1 left, where the ¼½¾¥ used to be.
     //                    Any accent-letter pair that has no macro is typed as accent + letter,
     //                    and that is also how the capitals É È À Ñ Ç are made.
-    // DE_LVL5 joins them on row 1: E1's Level-5 latch, which reaches ¼½¾ ¢ £ ‰ æ œ ø on the
-    //                    following keystroke. See the KC_NO list above for which key each one needs.
-    // other: µ §.
+    // other: µ §.  (E1's Level-5 latch DE_LVL5 lives on L_ALTGR, opposite its L_COMB counterpart.)
     // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
-            TO(0)  , KC_NO  , DE_LVL5, DE_DCED, DE_DSTR, DE_SECT,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
+            TO(0)  , KC_NO  , KC_NO  , DE_DCED, DE_DSTR, DE_SECT,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
             KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     DE_SS  , KC_NO  , DE_UDIA, DE_ODIA, KC_NO  , KC_NO  ,
             KC_NO  , DE_ADIA, DE_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , MX_NTIL, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
             KC_NO  , MX_AGRV, KC_NO  , MX_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , DE_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
@@ -211,12 +207,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         ),
     // Alternate character and navigation layer.
     // DE_TILD here is the 'live' (non-combining) tilde, as used in programming languages, among others.
-    // Its siblings ^ and ` are dead keys in the German layout and thus only available on L_COMBINE.
-    // ¢ lost its AltGr position in E1 (see the KC_NO list above); £ is the MX_PND macro.
+    // Its siblings ^ and ` are dead keys in the German layout, so MX_HAT and MX_BTIC add the space
+    // that turns them into the live characters. ¢ and £ are macros too, see the enum above.
+    // DE_LVL5 sits where `cozy` had ß, mirroring L_COMB on the other half: both are one-shot layers.
+    // ß itself is still on L_COMBINE twice, and on Shift+6 through the ko_6_ss key override.
     [L_ALTGR] = LAYOUT(
-            KC_NO  , DE_IEXL, KC_NO  , MX_PND , DE_EURO, KC_NO  ,                       KC_NO  , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
-            KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_SS  , DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
-            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , DE_SLSH, DE_LPRN, DE_RPRN, DE_SCLN, KC_RSFT,
+            KC_NO  , DE_IEXL, MX_CENT, MX_PND , DE_EURO, KC_NO  ,                       MX_HAT , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
+            KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_LVL5, DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
+            KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       MX_BTIC, DE_SLSH, DE_LPRN, DE_RPRN, DE_SCLN, KC_RSFT,
             KC_LCTL, KC_PGUP, MS_WHLD, MS_WHLU, KC_PGDN, KC_ENT , KC_LGUI,     KC_LGUI, DE_MUL , DE_EQL , DE_LABK, DE_RABK, DE_NDSH, KC_INS ,
                                                 KC_LALT, KC_TRNS, KC_TRNS,     KC_NO  , KC_TRNS, KC_RCTL
         ),
@@ -313,7 +311,9 @@ const int SEND_STRING_DELAY_MS = 10;
 
     The accented letters here are minuscules. Capitals are out of scope on purpose: they are rare
     enough to be typed as an explicit dead accent from row 1 of L_COMBINE plus a shifted letter,
-    and leaving them out keeps this table a plain list of two keycodes per entry.
+    and leaving them out keeps this table a plain list of two keycodes per entry. The same two
+    columns describe the live ^ and ` (a dead key plus a space) and the two level-5 currency
+    signs (the latch plus a key), so all of them share one sender.
 */
 typedef struct {
     uint16_t keycode;  // the custom keycode, as placed in the layers above
@@ -327,6 +327,9 @@ static const prefixed_key_t prefixed_keys[] = {
     {MX_AGRV, DE_GRV , DE_A   },  // à
     {MX_NTIL, DE_DTIL, DE_N   },  // ñ
     {MX_CCED, DE_DCED, DE_C   },  // ç
+    {MX_HAT , DE_CIRC, KC_SPC },  // ^  — dead key plus space gives the spacing character
+    {MX_BTIC, DE_GRV , KC_SPC },  // `
+    {MX_CENT, DE_LVL5, DE_C   },  // ¢
     {MX_PND , DE_LVL5, DE_ACUT},  // £
 };
 
