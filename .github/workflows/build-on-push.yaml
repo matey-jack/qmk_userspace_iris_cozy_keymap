@@ -7,6 +7,14 @@ on:
 permissions:
   contents: write
 
+# One run per branch at a time. The `release` job creates a Git tag, and two runs racing on
+# `main` would both pass the version gate before either of them tags, so they must not overlap.
+# On `main` a queued run therefore waits instead of cancelling, so a release is never killed
+# half way through; on every other branch the newer push simply supersedes the older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
     # Issue #8 asks for the version to come out of the `macros` array of a `keymap.json`.
     # The `cozy_de` keymap has no `keymap.json` (that is the whole point of doing #8 instead of #7),
@@ -107,11 +115,25 @@ jobs:
           name: iris-cozy-de-${{ needs.version.outputs.version }}
           path: dist
 
+      # The `version` job checked that this tag did not exist, but that was several minutes and
+      # one firmware build ago, so check again here rather than trusting the earlier answer.
       - name: Create the tag
         env:
           VERSION: ${{ needs.version.outputs.version }}
         run: |
           set -euo pipefail
+          existing=$(git ls-remote --tags origin "refs/tags/$VERSION^{}" | awk '{print $1}')
+          if [ -z "$existing" ]; then
+            existing=$(git ls-remote --tags origin "refs/tags/$VERSION" | awk '{print $1}')
+          fi
+          if [ -n "$existing" ]; then
+            if [ "$existing" = "$GITHUB_SHA" ]; then
+              echo "Tag $VERSION already points at $GITHUB_SHA; leaving it alone."
+              exit 0
+            fi
+            echo "::error::Tag $VERSION already exists and points at $existing, not at $GITHUB_SHA."
+            exit 1
+          fi
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git tag -a "$VERSION" -m "Firmware $VERSION"
