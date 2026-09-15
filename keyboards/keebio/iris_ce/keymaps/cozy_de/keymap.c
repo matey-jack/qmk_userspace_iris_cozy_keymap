@@ -44,11 +44,15 @@
     can be checked against the `xkb_symbols "e1"` block of `reference/xkb/symbols/de`.
 
     Caution: E1 leaves level 4 (AltGr+Shift) unassigned on every key used here — the xkb source
-    writes `any` there — and moves what `de(basic)` had on level 4 to levels 5 and 6, which are
-    reached through the Level-5 latch on AltGr+F. That latch has no known Windows equivalent, so
-    this keymap stays on levels 1 to 3 and lists the characters it loses that way further down.
-    It also means that a held Shift turns any ALGR() keycode below into a no-op, which is why the
-    accent macros at the end of this file clear the modifiers before sending their dead key.
+    writes `any` there — and moves what `de(basic)` had on level 4 to levels 5 and 6. This means
+    that a held Shift turns any ALGR() keycode below into a no-op, which is why the accent macros
+    at the end of this file clear the modifiers before sending their dead key.
+
+    Levels 5 and 6 are reached through the Level-5 latch, which E1 puts on AltGr+F and which this
+    keymap exposes as DE_LVL5 next to the dead keys on L_COMBINE. Like a dead key, it applies to
+    the next keystroke only. It is the one keycode here that is *not* expected to work on Windows,
+    whose E1 implementation is not known to have an equivalent; everything reachable only through
+    it is listed separately further down.
 */
 // Dead keys. `de(basic)` has only the acute, grave and circumflex (which E1 keeps in place, so
 // `DE_ACUT`, `DE_GRV` and `DE_CIRC` from `keymap_german.h` still apply) plus a diaeresis on
@@ -58,6 +62,10 @@
 #define DE_DDIA ALGR(DE_Z)        // ¨ dead diaeresis  <AD06> level 3: dead_diaeresis  (moved from AltGr+ü)
 #define DE_DSTR ALGR(DE_ADIA)     // / dead stroke     <AC11> level 3: dead_stroke  (ø, đ, ł, ...)
 
+// The Level-5 latch, E1's own version of AltGr, for everything on levels 5 and 6.
+// Not a dead key in the xkb sense, but it behaves like one: it modifies the next keystroke.
+#define DE_LVL5 ALGR(DE_F)        // ⇮ level-5 latch  <AC04> level 3: ISO_Level5_Latch
+
 // Ordinary characters that E1 places differently from `de(basic)`.
 #define DE_IEXL ALGR(DE_5)        // ¡ inverted !      <AE05> level 3: exclamdown
 #define DE_IQUE ALGR(DE_6)        // ¿ inverted ?      <AE06> level 3: questiondown
@@ -65,28 +73,32 @@
 #define DE_NDSH ALGR(DE_N)        // – n-dash          <AB06> level 3: endash
 
 /*
-    Keycodes of the `cozy` keymap that still have no equivalent on levels 1 to 3 of `de(e1)`
-    and are therefore mapped to KC_NO here. (Sorted the way they appear in the layers below.)
+    Keycodes of the `cozy` keymap that are not a single keycode on `de(e1)` and are therefore
+    mapped to KC_NO here. (Sorted the way they appear in the layers below.)
 
-    Everything in this list sits on E1's level 5 or 6, behind the Level-5 latch on AltGr+F.
-    The latch works on Linux, but this keymap deliberately does not use it: per issue #8 the
-    keymap has to work on Windows too, and the Windows E1 implementation is not known to have
-    an equivalent. Sending them as Unicode is the other way out, but that would mean turning
-    `UNICODE_ENABLE` back on and picking an input mode per operating system.
+    Almost all of them are still typable, just as two keystrokes: E1 keeps them on level 5,
+    behind the DE_LVL5 latch that sits with the dead keys on row 1 of L_COMBINE. Tapping DE_LVL5
+    leaves the one-shot layer, so the second keystroke comes from the base layer.
+
+    Note that this is the part of the keymap that is expected to be Linux-only, since the Windows
+    E1 implementation is not known to have a Level-5 latch. Nothing else here depends on it.
 
     On the L_COMBINE layer:
-     - US_QRTR ¼, US_HALF ½, US_TQTR ¾ – `de(basic)` inherited ¼ and ½ from `latin(basic)` on level 3;
-                                    E1 moves all three fractions to level 5 of the number row.
-     - US_YEN  ¥ – E1 drops the yen sign entirely; `de(basic)` had it on AltGr+Shift+Z.
-     - US_AE   æ – level 5 of <AC11>. `de(basic)` had it on AltGr+A, which in E1 is the Compose key.
-     - US_OSTR ø – level 5 of <AD09>. `de(basic)` had it on AltGr+O, which in E1 is dead_abovering.
-                    Type DE_DSTR (row 1 of this layer) followed by `o` instead.
-     - UC_oe   œ – level 5 of <AC10>; was typed via QMK Unicode input in `cozy`.
+     - US_QRTR ¼, US_HALF ½, US_TQTR ¾ – DE_LVL5 then 1, 2 or 3.  `de(basic)` inherited ¼ and ½
+                                    from `latin(basic)` on level 3; E1 moves all three fractions to level 5.
+     - US_YEN  ¥ – not typable: E1 drops the yen sign from every level.
+                    `de(basic)` had it on AltGr+Shift+Z.
+     - US_AE   æ – DE_LVL5 then ä.  `de(basic)` had it on AltGr+A, which in E1 is the Compose key.
+     - US_OSTR ø – DE_LVL5 then o, or DE_DSTR (row 1 of this layer) then o, which also works
+                    on Windows and additionally gives đ and ł.  `de(basic)` had ø on AltGr+O,
+                    which in E1 is dead_abovering.
+     - UC_oe   œ – DE_LVL5 then ö; was typed via QMK Unicode input in `cozy`.
 
     On the L_ALTGR layer:
-     - US_CENT ¢ – level 5 of <AB03>; `de(basic)` had it on AltGr+C via `latin(type4)`.
-     - US_PND  £ – level 5 of <AE12>; `de(basic)` had it on AltGr+Shift+3.
-     - UC_PMIL ‰ – level 5 of <AE05>. E1 does have the per mille sign, just not within reach.
+     - US_CENT ¢ – DE_LVL5 then c.  `de(basic)` had it on AltGr+C via `latin(type4)`.
+     - US_PND  £ – DE_LVL5 then ´, which means coming back to this layer for the second keystroke,
+                    since ´ is not on the base layer.  `de(basic)` had it on AltGr+Shift+3.
+     - UC_PMIL ‰ – DE_LVL5 then 5.  E1 does have the per mille sign; `de(basic)` did not.
      - MX_HAT  ^ – in E1 the ^ key is still dead_circumflex, so a *live* ^ needs a trailing space.
                     The dead version is on L_COMBINE as DE_CIRC.
      - MX_BTIC ` – likewise: Shift+´ is dead_grave, there is no live backtick.
@@ -177,14 +189,16 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
     // accented letters: äöü ß, and the five macros é è à ñ ç (minuscules only, see the enum above).
     // combining accents: all seven that E1 offers — ^ ¨ ´ ` ~ on row 1 right (as in `cozy`),
-    //                    plus the cedilla and the stroke on row 1 left, where E1 has no ¼½¾¥ for us.
+    //                    plus the cedilla and the stroke on row 1 left, where the ¼½¾¥ used to be.
     //                    Any accent-letter pair that has no macro is typed as accent + letter,
     //                    and that is also how the capitals É È À Ñ Ç are made.
+    // DE_LVL5 joins them on row 1: E1's Level-5 latch, which reaches ¼½¾ ¢ £ ‰ æ œ ø on the
+    //                    following keystroke. See the KC_NO list above for which key each one needs.
     // other: µ §.
     // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
-            TO(0)  , KC_NO  , KC_NO  , DE_DCED, DE_DSTR, DE_SECT,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
+            TO(0)  , KC_NO  , DE_LVL5, DE_DCED, DE_DSTR, DE_SECT,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
             KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     DE_SS  , KC_NO  , DE_UDIA, DE_ODIA, KC_NO  , KC_NO  ,
             KC_NO  , DE_ADIA, DE_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , MX_NTIL, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
             KC_NO  , MX_AGRV, KC_NO  , MX_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , DE_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
