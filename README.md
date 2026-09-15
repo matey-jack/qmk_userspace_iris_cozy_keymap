@@ -181,10 +181,13 @@ modifiers before sending their dead key, because in the German layout a held Shi
 ´ into ` (silently making è out of é), and would push the AltGr dead keys onto E1's unassigned
 AltGr+Shift level, where they produce nothing at all.
 
-What E1 does *not* give us is ¼ ½ ¾ ¢ £ ‰ æ œ ø as single keys: it keeps them on levels 5 and 6,
-behind an `ISO_Level5_Latch` that has no known Windows equivalent. They are `KC_NO` here rather
-than being typed through a Linux-only latch or through QMK's per-OS Unicode input. (¥ is gone
-from E1 altogether.)
+¼ ½ ¾ ¢ £ ‰ æ œ ø are not single keys on E1: it keeps them on level 5, behind an
+`ISO_Level5_Latch`. That latch sits on row 1 of `L_COMBINE` alongside the dead keys, as `DE_LVL5`,
+and like a dead key it applies to the next keystroke — `DE_LVL5` then `1` gives ¼, `DE_LVL5` then
+`ä` gives æ, and so on; the comment block at the head of `cozy_de/keymap.c` lists each one.
+This is the only part of the keymap expected to be **Linux-only**, since the Windows E1
+implementation is not known to have a Level-5 latch. (ø also has a Windows-safe route:
+the dead stroke followed by `o`. ¥ is gone from E1 altogether and is not typable at all.)
 
 The key overrides restore the Cozy Shift mapping on top of the German layout.
 The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`, `Shift 5 → %`,
