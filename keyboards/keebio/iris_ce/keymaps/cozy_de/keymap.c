@@ -1,5 +1,5 @@
 /*
-    "The Cozy Keyboard" letter mapping with a mix of US ANSI and DE Qwertz shift mapping to accomodate for
+    "The Cozy Keyboard" letter mapping with a mix of US ANSI and DE Qwertz shift mapping to accommodate for
     the reduced number of keys on the Iris keyboard.
 
     This is the "German OS layout" edition of the `cozy` keymap:
@@ -28,7 +28,7 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone DE, rev22.2-german-os-layout"
+#define VERSION_STRING "Cozy-DE, rev00"
 
 /*
     Characters that xkb's `de(basic)` puts on the AltGr (level 3) and AltGr+Shift (level 4) levels
@@ -119,10 +119,8 @@ enum custom_keycodes {
 /*
     Various convenience keycodes.
 */
-// The expose / task view key: a plain Win+Tab, no hold function.
-// (Ubuntu only accepts the *left* Gui key for its expose feature, hence G() and not RGUI.)
-// The Gui modifier itself stays on the left thumb key.
-// Hint to open the start menu: use Ctrl+Esc.
+// The expose / task view key for Windows: a plain Win+Tab, no hold function.
+// The Gui modifier itself stays on the left thumb key (for the start menu in Windows and Expose in Ubuntu).
 #define MC_WINT  G(KC_TAB)
 
 // previous and next word cursor navigation

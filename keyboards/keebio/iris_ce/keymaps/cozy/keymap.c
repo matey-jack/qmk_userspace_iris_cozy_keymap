@@ -1,5 +1,5 @@
 /*
-    "The Cozy Keyboard" letter mapping with a mix of US ANSI and DE Qwertz shift mapping to accomodate for
+    "The Cozy Keyboard" letter mapping with a mix of US ANSI and DE Qwertz shift mapping to accommodate for
     the reduced number of keys on the Iris keyboard.
  */
 
@@ -100,8 +100,9 @@ quote_mode_t current_quote_mode = QUOTE_MODE_WINDOWS;
 /*
     Various convenience keycodes.
 */
-// Mod/Tap for Win and Win+Tab. Need custom code below to make it work, because the MT macro doesn't support modifier bits in the second arg.
-// Hint to open the start menu: use Ctrl+Esc. (Or L2 + a tab on the Gui key.)
+// Mod/Tap for Win and Win+Tab. Need custom code below, because the MT macro doesn't support modifier bits in the second arg.
+// This triggers expose / task view in Windows and behaves like a Windows key when held.
+// The Gui modifier itself stays on the left thumb key (for the start menu in Windows and Expose in Ubuntu).
 #define MC_WINT  MT(MOD_RGUI, KC_TAB)
 
 // previous and next word cursor navigation
