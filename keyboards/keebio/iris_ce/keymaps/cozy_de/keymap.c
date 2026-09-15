@@ -96,8 +96,6 @@
 
     On the L_ALTGR layer:
      - US_CENT ¢ – DE_LVL5 then c.  `de(basic)` had it on AltGr+C via `latin(type4)`.
-     - US_PND  £ – DE_LVL5 then ´, which means coming back to this layer for the second keystroke,
-                    since ´ is not on the base layer.  `de(basic)` had it on AltGr+Shift+3.
      - UC_PMIL ‰ – DE_LVL5 then 5.  E1 does have the per mille sign; `de(basic)` did not.
      - MX_HAT  ^ – in E1 the ^ key is still dead_circumflex, so a *live* ^ needs a trailing space.
                     The dead version is on L_COMBINE as DE_CIRC.
@@ -123,21 +121,28 @@ enum layer_names {
 // therefore we don't need the AltGr modifier on the base layer. (But there's one on the Fn layer.)
 
 /*
-    Custom keycodes: printing the firmware version, and the five accented letters that are
-    frequent enough to deserve a single keypress (section 2 of issue #8).
+    Custom keycodes: printing the firmware version, and the two-keystroke sequences that are
+    worth collapsing into a single keypress.
 
-    All five are minuscules only. Their capitals are rare enough to be typed the explicit way,
-    with the dead accent keys on row 1 of the L_COMBINE layer followed by a shifted letter,
-    so these macros do not have to deal with Shift at all — see send_accented_letter() below.
+    Five of them are the accented letters of section 2 of issue #8, minuscules only. Their
+    capitals are rare enough to be typed the explicit way, with the dead accent keys on row 1 of
+    the L_COMBINE layer followed by a shifted letter, so these macros never deal with Shift
+    at all — see send_prefixed_key() below.
+
+    The sixth is £. Of all the characters that E1 hides behind the Level-5 latch it is the only
+    one that gets a macro, because its second keystroke is the ´ key, which lives on L_COMBINE
+    rather than on the base layer: typing it by hand would mean re-entering the one-shot layer
+    in the middle of the sequence. The others end on a base-layer key and need no help.
 */
 enum custom_keycodes {
     MX_VERS = SAFE_RANGE, // ugly hack: prints the firmware version.
 
-    MX_EACU,  // é   dead acute   + e
-    MX_EGRV,  // è   dead grave   + e
-    MX_AGRV,  // à   dead grave   + a
-    MX_NTIL,  // ñ   dead tilde   + n   (needs E1; `de(basic)` has no dead tilde)
-    MX_CCED,  // ç   dead cedilla + c   (needs E1; `de(basic)` hides the cedilla on AltGr+´)
+    MX_EACU,  // é   dead acute    + e
+    MX_EGRV,  // è   dead grave    + e
+    MX_AGRV,  // à   dead grave    + a
+    MX_NTIL,  // ñ   dead tilde    + n   (needs E1; `de(basic)` has no dead tilde)
+    MX_CCED,  // ç   dead cedilla  + c   (needs E1; `de(basic)` hides the cedilla on AltGr+´)
+    MX_PND ,  // £   level-5 latch + ´   (Linux only, like everything behind the latch)
 };
 
 /*
@@ -207,9 +212,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Alternate character and navigation layer.
     // DE_TILD here is the 'live' (non-combining) tilde, as used in programming languages, among others.
     // Its siblings ^ and ` are dead keys in the German layout and thus only available on L_COMBINE.
-    // ¢ and £ lost their AltGr positions in E1 (see the KC_NO list above) and are KC_NO now.
+    // ¢ lost its AltGr position in E1 (see the KC_NO list above); £ is the MX_PND macro.
     [L_ALTGR] = LAYOUT(
-            KC_NO  , DE_IEXL, KC_NO  , KC_NO  , DE_EURO, KC_NO  ,                       KC_NO  , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
+            KC_NO  , DE_IEXL, KC_NO  , MX_PND , DE_EURO, KC_NO  ,                       KC_NO  , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
             KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_SS  , DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , DE_SLSH, DE_LPRN, DE_RPRN, DE_SCLN, KC_RSFT,
             KC_LCTL, KC_PGUP, MS_WHLD, MS_WHLU, KC_PGDN, KC_ENT , KC_LGUI,     KC_LGUI, DE_MUL , DE_EQL , DE_LABK, DE_RABK, DE_NDSH, KC_INS ,
@@ -303,24 +308,26 @@ const key_override_t *key_overrides[] = {
 const int SEND_STRING_DELAY_MS = 10;
 
 /*
-    The accented letters of section 2 of issue #8: a dead accent key followed by a base letter.
+    The two-keystroke sequences behind the custom keycodes above: a prefix key — a dead accent,
+    or E1's Level-5 latch — followed by the key that the prefix applies to.
 
-    All five are minuscules. Capitals are out of scope on purpose: they are rare enough to be
-    typed as an explicit dead accent from row 1 of L_COMBINE plus a shifted letter, and leaving
-    them out keeps this table a plain list of two keycodes per entry.
+    The accented letters here are minuscules. Capitals are out of scope on purpose: they are rare
+    enough to be typed as an explicit dead accent from row 1 of L_COMBINE plus a shifted letter,
+    and leaving them out keeps this table a plain list of two keycodes per entry.
 */
 typedef struct {
-    uint16_t keycode;  // the custom keycode, as placed on the L_COMBINE layer
-    uint16_t dead;     // the de(e1) dead key that opens the sequence
-    uint16_t letter;   // the base letter that the accent is applied to
-} accented_letter_t;
+    uint16_t keycode;  // the custom keycode, as placed in the layers above
+    uint16_t prefix;   // the de(e1) dead key or Level-5 latch that opens the sequence
+    uint16_t base;     // the key that the prefix is applied to
+} prefixed_key_t;
 
-static const accented_letter_t accented_letters[] = {
-    {MX_EACU, DE_ACUT, DE_E},  // é
-    {MX_EGRV, DE_GRV , DE_E},  // è
-    {MX_AGRV, DE_GRV , DE_A},  // à
-    {MX_NTIL, DE_DTIL, DE_N},  // ñ
-    {MX_CCED, DE_DCED, DE_C},  // ç
+static const prefixed_key_t prefixed_keys[] = {
+    {MX_EACU, DE_ACUT, DE_E   },  // é
+    {MX_EGRV, DE_GRV , DE_E   },  // è
+    {MX_AGRV, DE_GRV , DE_A   },  // à
+    {MX_NTIL, DE_DTIL, DE_N   },  // ñ
+    {MX_CCED, DE_DCED, DE_C   },  // ç
+    {MX_PND , DE_LVL5, DE_ACUT},  // £
 };
 
 /*
@@ -330,7 +337,8 @@ static const accented_letter_t accented_letters[] = {
     macros produce the right character at all. With a Shift still held,
      - DE_ACUT would become DE_GRV, because ´ and ` share one key in the German layout, so é would
        silently come out as è, and
-     - DE_DTIL and DE_DCED would land on E1's unassigned level 4 (AltGr+Shift) and produce nothing.
+     - DE_DTIL, DE_DCED and DE_LVL5 would land on E1's unassigned level 4 (AltGr+Shift) and
+       produce nothing at all.
     tap_code16() only ever *adds* the modifiers encoded in its keycode; it never removes a
     modifier that is physically held, so the clearing has to happen here.
 
@@ -343,7 +351,7 @@ static const accented_letter_t accented_letters[] = {
     any unknown keycode. That is the correct behavior here: Caps Word wants capitals, and these
     macros deliberately only make minuscules.
 */
-static void send_accented_letter(const accented_letter_t *accent) {
+static void send_prefixed_key(const prefixed_key_t *sequence) {
     const uint8_t real_mods = get_mods();
     const uint8_t weak_mods = get_weak_mods();
 
@@ -353,8 +361,8 @@ static void send_accented_letter(const accented_letter_t *accent) {
     send_keyboard_report();
 
     // The same delay that SEND_STRING needs below: dead key sequences get dropped when typed too fast.
-    tap_code16_delay(accent->dead, SEND_STRING_DELAY_MS);
-    tap_code16_delay(accent->letter, SEND_STRING_DELAY_MS);
+    tap_code16_delay(sequence->prefix, SEND_STRING_DELAY_MS);
+    tap_code16_delay(sequence->base, SEND_STRING_DELAY_MS);
 
     set_mods(real_mods);
     set_weak_mods(weak_mods);
@@ -362,10 +370,10 @@ static void send_accented_letter(const accented_letter_t *accent) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    for (uint8_t i = 0; i < ARRAY_SIZE(accented_letters); i++) {
-        if (keycode == accented_letters[i].keycode) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(prefixed_keys); i++) {
+        if (keycode == prefixed_keys[i].keycode) {
             if (record->event.pressed) {
-                send_accented_letter(&accented_letters[i]);
+                send_prefixed_key(&prefixed_keys[i]);
             }
             return false;
         }
