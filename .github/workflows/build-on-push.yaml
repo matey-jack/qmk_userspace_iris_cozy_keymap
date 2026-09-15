@@ -8,6 +8,43 @@ permissions:
   contents: write
 
 jobs:
+    # Issue #8 asks for the version to come out of the `macros` array of a `keymap.json`.
+    # The `cozy_de` keymap has no `keymap.json` (that is the whole point of doing #8 instead of #7),
+    # so the same regex is applied to the VERSION_STRING of its `keymap.c` instead.
+  version:
+    name: 'Read firmware version'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      tag_exists: ${{ steps.tag.outputs.exists }}
+    env:
+      KEYMAP_C: keyboards/keebio/iris_ce/keymaps/cozy_de/keymap.c
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract the version string
+        id: read
+        run: |
+          set -euo pipefail
+          version=$(grep -E '^#define[[:space:]]+VERSION_STRING' "$KEYMAP_C" \
+                    | grep -oE '[rR]ev[0-9]([0-9.]*[0-9])?' | head -n 1)
+          if [ -z "$version" ]; then
+            echo "::error file=$KEYMAP_C::VERSION_STRING has no [rR]ev[0-9]([0-9.]*[0-9])? version in it"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Firmware version: $version"
+
+      - name: Check whether that version was already released
+        id: tag
+        run: |
+          set -euo pipefail
+          if git ls-remote --tags --exit-code origin "refs/tags/${{ steps.read.outputs.version }}" > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
     name: 'QMK Userspace Build'
     uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
@@ -15,27 +52,75 @@ jobs:
       qmk_repo: qmk/qmk_firmware
       qmk_ref: master
 
-    # adapted from https://github.com/qmk/.github/blob/main/.github/workflows/qmk_userspace_publish.yml
-    # but that has too much configuration.
-    # It's better to have the defaults for the 'name' and 'tag' in the softprops/action-gh-release@v2!
-  publish:
-    name: 'Publish'
-    needs: build
-    if: github.ref_type == 'tag'
+    # Renames the `cozy_de` firmware to a downloadable name and *then* enforces the version gate,
+    # so that a build whose version was already released still leaves its artifact behind.
+  package:
+    name: 'Package firmware'
+    needs: [version, build]
     runs-on: ubuntu-latest
-
     steps:
-      - name: Download binaries
+      - name: Download the build output
         uses: actions/download-artifact@v4
         with:
-            name: Firmware
+          name: Firmware
+          path: firmware
+
+      - name: Rename the cozy_de firmware
+        run: |
+          set -euo pipefail
+          src=$(find firmware -name '*cozy_de*.uf2' | head -n 1)
+          if [ -z "$src" ]; then
+            echo "::error::The build produced no *cozy_de*.uf2 file"
+            find firmware -type f
+            exit 1
+          fi
+          mkdir -p dist
+          cp "$src" "dist/iris-cozy-de-${{ needs.version.outputs.version }}.uf2"
+          ls -l dist
+
+      - name: Upload the firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: iris-cozy-de-${{ needs.version.outputs.version }}
+          path: dist/*.uf2
+          if-no-files-found: error
+
+      - name: Fail if this version was already released
+        if: needs.version.outputs.tag_exists == 'true'
+        run: |
+          echo "::error::Tag ${{ needs.version.outputs.version }} already exists. Bump VERSION_STRING in keymap.c."
+          exit 1
+
+    # Replaces the old `publish` job, which only ran for pushed tags. Since every push to `main`
+    # now has to carry a version that was never released, `main` can create its own tag.
+  release:
+    name: 'Tag and release'
+    needs: [version, package]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the packaged firmware
+        uses: actions/download-artifact@v4
+        with:
+          name: iris-cozy-de-${{ needs.version.outputs.version }}
+          path: dist
+
+      - name: Create the tag
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$VERSION" -m "Firmware $VERSION"
+          git push origin "refs/tags/$VERSION"
 
       - name: Generate Release
         uses: softprops/action-gh-release@v2
         with:
             token: ${{ github.token }}
-            fail_on_unmatched_files: false
-            files: |
-                **/*.hex
-                **/*.bin
-                **/*.uf2
+            tag_name: ${{ needs.version.outputs.version }}
+            fail_on_unmatched_files: true
+            files: dist/*.uf2

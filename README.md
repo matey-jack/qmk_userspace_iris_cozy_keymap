@@ -210,11 +210,19 @@ My workaround is to run `./qmk compile -km cozy` instead.
 This means that I don't need `qmk userspace-add` to set this up, 
 but I do need `qmk config user.overlay_dir=(where the user space is checked out)`.
 
-The Github Actions workflow should run the compile on every push. 
+The Github Actions workflow runs the compile on every push, to any branch.
 
-To get an easily downloadable firmware, push a new tag to the repository.
-The workflow will create a release from that tag and attach the firmware to it.
-You should then go to that release and add some release notes, since none are added automatically.
+The workflow reads the `cozy_de` firmware version out of the `VERSION_STRING` in its `keymap.c`
+(the `[rR]ev[0-9]([0-9.]*[0-9])?` part of it) and uses it for two things:
+
+ - The built firmware is uploaded as a build artifact named `iris-cozy-de-${version}.uf2`,
+   so every branch build is downloadable without any tagging.
+ - If a Git tag of that name already exists, the build **fails** — after uploading the artifact,
+   so you still get the firmware. Bump `VERSION_STRING` to make it pass.
+
+On a push to `main` the workflow then creates the tag `${version}` and a GitHub Release with the
+`.uf2` attached. You should still go to that release and add some release notes,
+since none are added automatically.
 
 
 # Original QMK Readme follows
