@@ -152,16 +152,39 @@ Details of how well everything is production tested:
 `keyboards/keebio/iris_ce/keymaps/cozy_de` is a second keymap with the same physical layout,
 the same four layers and the same QMK keycodes as `cozy`, but with two differences:
 
- - It assumes that the computer runs the **standard German keyboard layout**
-   (xkb's `de(basic)`, aka Windows' "German (Germany)") instead of US extended international.
- - It contains **no custom code and no community modules**.
+ - It assumes that the computer runs the **German extended keyboard layout E1**
+   (xkb's `de(e1)`, standardized as DIN 2137-1:2020-11) instead of US extended international.
+   E1 is identical to the standard German layout on the plain and Shift levels, so only the
+   AltGr characters below actually depend on it.
+ - It contains **no community modules and almost no custom code**.
    The `getreuer/custom_shift_keys` module is replaced by [QMK's built-in Key Overrides](https://docs.qmk.fm/features/key_overrides),
-   and the only `process_record_user()` case left is the one that types the firmware version.
+   and `process_record_user()` is down to two things: typing the firmware version,
+   and the five accented letters described below.
 
 Because the German layout already has ä, ö, ü and ß as normal keys, one workaround of `cozy`
 is not needed here: the ANSI/Windows "quote mode" switch is gone, since the OS layout now decides
-what the accent keys do. In exchange, some characters of `cozy` have no equivalent in `de(basic)`
-and are mapped to `KC_NO`; the head of `cozy_de/keymap.c` lists all of them with the reason.
+what the accent keys do. In exchange, some characters of `cozy` have no equivalent on levels 1 to 3
+of `de(e1)` and are mapped to `KC_NO`; the head of `cozy_de/keymap.c` lists all of them with the reason.
+
+## Accented letters
+
+E1 is what makes this keymap's combining-accent layer complete. On top of the acute, grave and
+circumflex that the standard German layout already has, E1 adds a **dead tilde** (AltGr+i) and a
+**dead cedilla** (AltGr+j), and moves the **dead diaeresis** to AltGr+z; a **dead stroke**
+(AltGr+ä) for ø, đ and ł comes along too. All seven sit on row 1 of the `L_COMBINE` layer,
+so any accent-letter pair can be composed by typing the accent and then the letter.
+
+The five most frequent pairs also have a **one-key macro** on that layer: é, è, à, ñ and ç.
+These are minuscules only — the capitals É È À Ñ Ç are rare enough to be worth the two keystrokes,
+and are typed with the explicit dead accent followed by a shifted letter. The macros clear all
+modifiers before sending their dead key, because in the German layout a held Shift would turn
+´ into ` (silently making è out of é), and would push the AltGr dead keys onto E1's unassigned
+AltGr+Shift level, where they produce nothing at all.
+
+What E1 does *not* give us is ¼ ½ ¾ ¢ £ ‰ æ œ ø as single keys: it keeps them on levels 5 and 6,
+behind an `ISO_Level5_Latch` that has no known Windows equivalent. They are `KC_NO` here rather
+than being typed through a Linux-only latch or through QMK's per-OS Unicode input. (¥ is gone
+from E1 altogether.)
 
 The key overrides restore the Cozy Shift mapping on top of the German layout.
 The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`, `Shift 5 → %`,

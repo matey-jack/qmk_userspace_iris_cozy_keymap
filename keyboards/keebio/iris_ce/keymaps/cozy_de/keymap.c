@@ -3,10 +3,16 @@
     the reduced number of keys on the Iris keyboard.
 
     This is the "German OS layout" edition of the `cozy` keymap:
-    it assumes that the computer is running the *standard* German keyboard layout (xkb's `de(basic)`,
-    which is also what Windows calls "German (Germany)"), and it deliberately contains
-     - no custom keycodes / no `process_record_user()` logic, except for printing the firmware version, and
-     - no community modules (the `getreuer/custom_shift_keys` module is replaced by QMK's built-in Key Overrides).
+    it assumes that the computer is running the German *extended* keyboard layout E1
+    (xkb's `de(e1)`, standardized as DIN 2137-1:2020-11), and it deliberately contains
+     - no community modules (the `getreuer/custom_shift_keys` module is replaced by QMK's built-in Key Overrides), and
+     - no `process_record_user()` logic beyond what the accented letters actually need:
+       printing the firmware version, and the five accent macros at the end of this file.
+
+    E1 is identical to the standard German layout `de(basic)` on levels 1 and 2 (plain and Shift),
+    so every unmodified and every shifted key of this keymap types the same on both layouts.
+    The two differ on level 3 (AltGr), and that is exactly where E1 puts the dead keys that
+    `de(basic)` lacks — which is the reason for targeting E1 in the first place.
 
     The physical key positions, the layer structure and all the QMK-specific keycodes are identical to `cozy`.
     Only the character-producing keycodes are swapped for their German counterparts.
@@ -28,54 +34,63 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-#define VERSION_STRING "Cozy-DE, rev00"
+#define VERSION_STRING "Cozy-DE, rev01"
 
 /*
-    Characters that xkb's `de(basic)` puts on the AltGr (level 3) and AltGr+Shift (level 4) levels
+    Dead keys and characters that xkb's `de(e1)` puts on the AltGr (level 3) level
     but which QMK's `keymap_german.h` does not define.
 
-    The level-3/4 mappings come partly from `symbols/de` itself and partly from the `latin(type4)` /
-    `latin(basic)` layouts that it includes; both files are checked into `reference/xkb/symbols/`.
-    The comment after each line names the xkb key code and the xkb keysym it produces.
+    The comment after each line names the xkb key code and the xkb keysym it produces; all of them
+    can be checked against the `xkb_symbols "e1"` block of `reference/xkb/symbols/de`.
+
+    Caution: E1 leaves level 4 (AltGr+Shift) unassigned on every key used here — the xkb source
+    writes `any` there — and moves what `de(basic)` had on level 4 to levels 5 and 6, which are
+    reached through the Level-5 latch on AltGr+F. That latch has no known Windows equivalent, so
+    this keymap stays on levels 1 to 3 and lists the characters it loses that way further down.
+    It also means that a held Shift turns any ALGR() keycode below into a no-op, which is why the
+    accent macros at the end of this file clear the modifiers before sending their dead key.
 */
-#define DE_NDSH ALGR(DE_MINS)     // – n-dash          <AB10> level 3: endash
-#define DE_IEXL ALGR(S(DE_1))     // ¡ inverted !      <AE01> level 4: exclamdown
-#define DE_IQUE ALGR(S(DE_SS))    // ¿ inverted ?      <AE11> level 4: questiondown
-#define DE_QRTR ALGR(DE_4)        // ¼ one quarter     <AE04> level 3: onequarter
-#define DE_HALF ALGR(DE_5)        // ½ one half        <AE05> level 3: onehalf
-#define DE_PND  ALGR(S(DE_3))     // £ pound sign      <AE03> level 4: sterling
-#define DE_CENT ALGR(DE_C)        // ¢ cent sign       <AB03> level 3: cent
-#define DE_YEN  ALGR(S(DE_Z))     // ¥ yen sign        <AD06> level 4: yen
-#define DE_AE   ALGR(DE_A)        // æ                 <AC01> level 3: ae
-#define DE_OSTR ALGR(DE_O)        // ø                 <AD09> level 3: oslash
-#define DE_MUL  ALGR(S(DE_COMM))  // × multiply sign   <AB08> level 4: multiply
-#define DE_DDIA ALGR(DE_UDIA)     // ¨ combining diaeresis (dead key)  <AD11> level 3: dead_diaeresis
+// Dead keys. `de(basic)` has only the acute, grave and circumflex (which E1 keeps in place, so
+// `DE_ACUT`, `DE_GRV` and `DE_CIRC` from `keymap_german.h` still apply) plus a diaeresis on
+// AltGr+ü. E1 adds the tilde and the cedilla, which is what finally makes ñ and ç typable here.
+#define DE_DTIL ALGR(DE_I)        // ~ dead tilde      <AD08> level 3: dead_tilde
+#define DE_DCED ALGR(DE_J)        // ¸ dead cedilla    <AC07> level 3: dead_cedilla
+#define DE_DDIA ALGR(DE_Z)        // ¨ dead diaeresis  <AD06> level 3: dead_diaeresis  (moved from AltGr+ü)
+#define DE_DSTR ALGR(DE_ADIA)     // / dead stroke     <AC11> level 3: dead_stroke  (ø, đ, ł, ...)
+
+// Ordinary characters that E1 places differently from `de(basic)`.
+#define DE_IEXL ALGR(DE_5)        // ¡ inverted !      <AE05> level 3: exclamdown
+#define DE_IQUE ALGR(DE_6)        // ¿ inverted ?      <AE06> level 3: questiondown
+#define DE_MUL  ALGR(DE_CIRC)     // × multiply sign   <TLDE> level 3: multiply
+#define DE_NDSH ALGR(DE_N)        // – n-dash          <AB06> level 3: endash
 
 /*
-    Keycodes of the `cozy` keymap that have no equivalent in the standard German layout
-    and are therefore mapped to KC_NO here.
-    (Sorted the way they appear in the layers below.)
+    Keycodes of the `cozy` keymap that still have no equivalent on levels 1 to 3 of `de(e1)`
+    and are therefore mapped to KC_NO here. (Sorted the way they appear in the layers below.)
+
+    Everything in this list sits on E1's level 5 or 6, behind the Level-5 latch on AltGr+F.
+    The latch works on Linux, but this keymap deliberately does not use it: per issue #8 the
+    keymap has to work on Windows too, and the Windows E1 implementation is not known to have
+    an equivalent. Sending them as Unicode is the other way out, but that would mean turning
+    `UNICODE_ENABLE` back on and picking an input mode per operating system.
 
     On the L_COMBINE layer:
-     - US_TQTR ¾ – `de(basic)` inherits ¼ and ½ from `latin(basic)`, but `latin(type4)` replaces
-                   the ¾ on AltGr+6 with ¬ (notsign). Only ¼ and ½ survive.
-     - MX_CTIL  ̃ – the combining (dead) tilde only exists in the `de(deadtilde)` variant.
-                   `de(basic)` has a live ~ on AltGr++, which is used on the AltGr layer below.
-     - US_NTIL ñ – no precomposed ñ; and without a dead tilde it cannot be composed either.
-     - US_CCED ç – no precomposed ç. (`de(basic)` has dead_cedilla on AltGr+´, but that is a dead key,
-                   so it cannot be sent as a single keycode.)
-     - US_EACU é – no precomposed é; type ´ then e instead (´ is on this layer).
-     - MX_AGRV à – no precomposed à; type ` then a instead (` is on this layer).
-     - MX_EGRV è – no precomposed è; type ` then e instead.
-     - UC_oe   œ – was typed via QMK Unicode input, which is custom/OS-specific; not in `de(basic)`.
+     - US_QRTR ¼, US_HALF ½, US_TQTR ¾ – `de(basic)` inherited ¼ and ½ from `latin(basic)` on level 3;
+                                    E1 moves all three fractions to level 5 of the number row.
+     - US_YEN  ¥ – E1 drops the yen sign entirely; `de(basic)` had it on AltGr+Shift+Z.
+     - US_AE   æ – level 5 of <AC11>. `de(basic)` had it on AltGr+A, which in E1 is the Compose key.
+     - US_OSTR ø – level 5 of <AD09>. `de(basic)` had it on AltGr+O, which in E1 is dead_abovering.
+                    Type DE_DSTR (row 1 of this layer) followed by `o` instead.
+     - UC_oe   œ – level 5 of <AC10>; was typed via QMK Unicode input in `cozy`.
 
     On the L_ALTGR layer:
-     - UC_PMIL ‰ – was typed via QMK Unicode input; the per mille sign only exists in the German
-                   E1 extended layout (`de(e1)`), not in `de(basic)`.
-     - MX_HAT  ^ – in `de(basic)` the ^ key is dead_circumflex, so a *live* ^ needs a trailing space,
-                   which would require custom code. The dead version is on L_COMBINE as DE_CIRC.
+     - US_CENT ¢ – level 5 of <AB03>; `de(basic)` had it on AltGr+C via `latin(type4)`.
+     - US_PND  £ – level 5 of <AE12>; `de(basic)` had it on AltGr+Shift+3.
+     - UC_PMIL ‰ – level 5 of <AE05>. E1 does have the per mille sign, just not within reach.
+     - MX_HAT  ^ – in E1 the ^ key is still dead_circumflex, so a *live* ^ needs a trailing space.
+                    The dead version is on L_COMBINE as DE_CIRC.
      - MX_BTIC ` – likewise: Shift+´ is dead_grave, there is no live backtick.
-                   The dead version is on L_COMBINE as DE_GRV.
+                    The dead version is on L_COMBINE as DE_GRV.
 
     On the L_FN layer:
      - MX_TQM    – the ANSI/Windows "quote mode" switch is gone together with the custom code;
@@ -95,9 +110,22 @@ enum layer_names {
 // The AltGr does almost everything that the AltGr level does in the software layout,
 // therefore we don't need the AltGr modifier on the base layer. (But there's one on the Fn layer.)
 
-// The only custom keycode left: printing the firmware version.
+/*
+    Custom keycodes: printing the firmware version, and the five accented letters that are
+    frequent enough to deserve a single keypress (section 2 of issue #8).
+
+    All five are minuscules only. Their capitals are rare enough to be typed the explicit way,
+    with the dead accent keys on row 1 of the L_COMBINE layer followed by a shifted letter,
+    so these macros do not have to deal with Shift at all — see send_accented_letter() below.
+*/
 enum custom_keycodes {
     MX_VERS = SAFE_RANGE, // ugly hack: prints the firmware version.
+
+    MX_EACU,  // é   dead acute   + e
+    MX_EGRV,  // è   dead grave   + e
+    MX_AGRV,  // à   dead grave   + a
+    MX_NTIL,  // ñ   dead tilde   + n   (needs E1; `de(basic)` has no dead tilde)
+    MX_CCED,  // ç   dead cedilla + c   (needs E1; `de(basic)` hides the cedilla on AltGr+´)
 };
 
 /*
@@ -147,23 +175,27 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
     // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
-    // accented letters: äöü ß æ ø.
-    // combining accents: ´ ` ^ ¨ (the combining tilde is missing in de(basic), see the comment above).
-    // other: µ ¼½ ¥ §.
+    // accented letters: äöü ß, and the five macros é è à ñ ç (minuscules only, see the enum above).
+    // combining accents: all seven that E1 offers — ^ ¨ ´ ` ~ on row 1 right (as in `cozy`),
+    //                    plus the cedilla and the stroke on row 1 left, where E1 has no ¼½¾¥ for us.
+    //                    Any accent-letter pair that has no macro is typed as accent + letter,
+    //                    and that is also how the capitals É È À Ñ Ç are made.
+    // other: µ §.
     // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
-            TO(0)  , DE_QRTR, DE_HALF, KC_NO  , DE_YEN , DE_SECT,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , KC_NO  , TO(0)  ,
-            KC_NO  , DE_AE  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     DE_SS  , KC_NO  , DE_UDIA, DE_ODIA, KC_NO  , KC_NO  ,
-            KC_NO  , DE_ADIA, DE_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , KC_NO  , KC_NO  , KC_NO  , DE_OSTR, KC_NO  ,
-            KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , DE_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
-                                                KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , KC_NO
+            TO(0)  , KC_NO  , KC_NO  , DE_DCED, DE_DSTR, DE_SECT,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
+            KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     DE_SS  , KC_NO  , DE_UDIA, DE_ODIA, KC_NO  , KC_NO  ,
+            KC_NO  , DE_ADIA, DE_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , MX_NTIL, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
+            KC_NO  , MX_AGRV, KC_NO  , MX_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , DE_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
+                                                KC_NO  , KC_NO  , KC_NO  ,   MX_EACU, MX_EGRV, KC_NO
         ),
     // Alternate character and navigation layer.
     // DE_TILD here is the 'live' (non-combining) tilde, as used in programming languages, among others.
     // Its siblings ^ and ` are dead keys in the German layout and thus only available on L_COMBINE.
+    // ¢ and £ lost their AltGr positions in E1 (see the KC_NO list above) and are KC_NO now.
     [L_ALTGR] = LAYOUT(
-            KC_NO  , DE_IEXL, DE_CENT, DE_PND , DE_EURO, KC_NO  ,                       KC_NO  , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
+            KC_NO  , DE_IEXL, KC_NO  , KC_NO  , DE_EURO, KC_NO  ,                       KC_NO  , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
             KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_SS  , DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
             KC_LSFT, KC_HOME, KC_LEFT, KC_DOWN, KC_RGHT, KC_END ,                       KC_NO  , DE_SLSH, DE_LPRN, DE_RPRN, DE_SCLN, KC_RSFT,
             KC_LCTL, KC_PGUP, MS_WHLD, MS_WHLU, KC_PGDN, KC_ENT , KC_LGUI,     KC_LGUI, DE_MUL , DE_EQL , DE_LABK, DE_RABK, DE_NDSH, KC_INS ,
@@ -256,7 +288,74 @@ const key_override_t *key_overrides[] = {
 // 3 ms still had some dropped letters.
 const int SEND_STRING_DELAY_MS = 10;
 
+/*
+    The accented letters of section 2 of issue #8: a dead accent key followed by a base letter.
+
+    All five are minuscules. Capitals are out of scope on purpose: they are rare enough to be
+    typed as an explicit dead accent from row 1 of L_COMBINE plus a shifted letter, and leaving
+    them out keeps this table a plain list of two keycodes per entry.
+*/
+typedef struct {
+    uint16_t keycode;  // the custom keycode, as placed on the L_COMBINE layer
+    uint16_t dead;     // the de(e1) dead key that opens the sequence
+    uint16_t letter;   // the base letter that the accent is applied to
+} accented_letter_t;
+
+static const accented_letter_t accented_letters[] = {
+    {MX_EACU, DE_ACUT, DE_E},  // é
+    {MX_EGRV, DE_GRV , DE_E},  // è
+    {MX_AGRV, DE_GRV , DE_A},  // à
+    {MX_NTIL, DE_DTIL, DE_N},  // ñ
+    {MX_CCED, DE_DCED, DE_C},  // ç
+};
+
+/*
+    Send one entry of the table above, with every modifier taken out of the way first.
+
+    Clearing the modifiers is not just about the (out of scope) capitals — it is what makes the
+    macros produce the right character at all. With a Shift still held,
+     - DE_ACUT would become DE_GRV, because ´ and ` share one key in the German layout, so é would
+       silently come out as è, and
+     - DE_DTIL and DE_DCED would land on E1's unassigned level 4 (AltGr+Shift) and produce nothing.
+    tap_code16() only ever *adds* the modifiers encoded in its keycode; it never removes a
+    modifier that is physically held, so the clearing has to happen here.
+
+    Three modifier registers have to be dealt with: the real modifiers (a held Shift), the weak
+    ones (where Caps Word parks its Shift) and the one-shot ones (OS_LSFT on the L_FN layer).
+    Real and weak modifiers are restored afterwards; a one-shot modifier is not, because it was
+    spent on this keypress, exactly as it would have been on any ordinary key.
+
+    Note that this does stop Caps Word, since QMK's default caps_word_press_user() deactivates on
+    any unknown keycode. That is the correct behavior here: Caps Word wants capitals, and these
+    macros deliberately only make minuscules.
+*/
+static void send_accented_letter(const accented_letter_t *accent) {
+    const uint8_t real_mods = get_mods();
+    const uint8_t weak_mods = get_weak_mods();
+
+    clear_mods();
+    clear_weak_mods();
+    clear_oneshot_mods();
+    send_keyboard_report();
+
+    // The same delay that SEND_STRING needs below: dead key sequences get dropped when typed too fast.
+    tap_code16_delay(accent->dead, SEND_STRING_DELAY_MS);
+    tap_code16_delay(accent->letter, SEND_STRING_DELAY_MS);
+
+    set_mods(real_mods);
+    set_weak_mods(weak_mods);
+    send_keyboard_report();
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    for (uint8_t i = 0; i < ARRAY_SIZE(accented_letters); i++) {
+        if (keycode == accented_letters[i].keycode) {
+            if (record->event.pressed) {
+                send_accented_letter(&accented_letters[i]);
+            }
+            return false;
+        }
+    }
     switch (keycode) {
         case MX_VERS:
             if (record->event.pressed) {
