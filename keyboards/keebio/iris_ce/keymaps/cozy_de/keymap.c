@@ -81,12 +81,9 @@
      - MX_TQM    – the ANSI/Windows "quote mode" switch is gone together with the custom code;
                    the OS layout now decides what the accent keys do.
 
-    Two more behaviors of `cozy` are lost because they were implemented in custom code:
-     - MX_TABA, the "chameleon" Tab/ä key, becomes a plain DE_ADIA (ä/Ä). Since the German layout has
-       a real ä key, the workaround is no longer needed. Tab is on the L_ALTGR layer and on the
-       tap of MC_WINT (see below).
-     - MC_WINT keeps its RGUI hold function, but its tap is now a plain Tab instead of Win+Tab
-       (which cannot be put on the tap side of a Mod-Tap without custom code).
+    MX_TABA, the "chameleon" Tab/ä key, keeps its behavior without custom code: it is a plain
+    DE_ADIA (ä/Ä), and the ko_adia_tab key override further down turns Ctrl+ä and Alt+ä into
+    Ctrl+Tab and Alt+Tab. An unmodified Tab is on the L_ALTGR layer, as in `cozy`.
 */
 
 enum layer_names {
@@ -122,9 +119,11 @@ enum custom_keycodes {
 /*
     Various convenience keycodes.
 */
-// Mod/Tap for Win (hold) and Tab (tap).
-// Hint to open the start menu: use Ctrl+Esc. (Or L2 + a tab on the Gui key.)
-#define MC_WINT  MT(MOD_RGUI, KC_TAB)
+// The expose / task view key: a plain Win+Tab, no hold function.
+// (Ubuntu only accepts the *left* Gui key for its expose feature, hence G() and not RGUI.)
+// The Gui modifier itself stays on the left thumb key.
+// Hint to open the start menu: use Ctrl+Esc.
+#define MC_WINT  G(KC_TAB)
 
 // previous and next word cursor navigation
 // (This helps avoid pressing Ctrl modifier in addition to the layer toggle.)
@@ -186,7 +185,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 /*
-    Key overrides: the Cozy Shift mapping.
+    Key overrides: the Cozy Shift mapping, and the ä / Tab chameleon key below it.
+    Together they replace everything that `cozy` needed a community module or custom code for
+    (apart from printing the version).
 
     Three of the five custom shift keys of the `cozy` keymap are recreated here (Shift 6, 9 and 0);
     the other two (Shift `,` and Shift `.`) are already what the German layout does anyway.
@@ -215,6 +216,32 @@ const key_override_t ko_0_ques = ko_make_basic(MOD_MASK_SHIFT, KC_0, DE_QUES); /
 // other keys (' is Shift+#, " is Shift+2), so the Shift pairing has to be made here.
 const key_override_t ko_quot_dquo = ko_make_basic(MOD_MASK_SHIFT, DE_QUOT, DE_DQUO);
 
+/*
+    The "chameleon" ä key: Ctrl+ä is Ctrl+Tab and Alt+ä is Alt+Tab, while plain ä and Shift+ä stay
+    ä and Ä. This is what MX_TABA did in custom code, and it keeps Alt+Tab in its traditional place
+    now that the ä key sits where Tab used to be.
+
+    This one cannot use ko_make_basic(), which would suppress the trigger modifier and re-add it as
+    part of the replacement keycode: those "weak" mods are dropped every time the replacement is
+    unregistered, so the app switcher would close between two taps of ä. Suppressing nothing instead
+    leaves the physically held Ctrl / Alt in the keyboard report for as long as it is really down,
+    so holding Alt and tapping ä repeatedly walks through the window list as it should.
+
+    A held Shift is passed through the same way, which makes Ctrl+Shift+ä a Ctrl+Shift+Tab.
+*/
+const key_override_t ko_adia_tab = {
+    .trigger           = DE_ADIA,
+    .trigger_mods      = MOD_MASK_CA, // Ctrl or Alt ...
+    .options           = ko_options_all_activations | ko_option_one_mod, // ... any one of them suffices
+    .suppressed_mods   = 0,           // keep the real modifier down, see above
+    .negative_mod_mask = 0,
+    .replacement       = KC_TAB,
+    .layers            = ~0,
+    .custom_action     = NULL,
+    .context           = NULL,
+    .enabled           = NULL,
+};
+
 const key_override_t *key_overrides[] = {
     &ko_2_at,
     &ko_3_hash,
@@ -224,6 +251,7 @@ const key_override_t *key_overrides[] = {
     &ko_9_plus,
     &ko_0_ques,
     &ko_quot_dquo,
+    &ko_adia_tab,
     NULL,
 };
 

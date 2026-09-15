@@ -158,9 +158,8 @@ the same four layers and the same QMK keycodes as `cozy`, but with two differenc
    The `getreuer/custom_shift_keys` module is replaced by [QMK's built-in Key Overrides](https://docs.qmk.fm/features/key_overrides),
    and the only `process_record_user()` case left is the one that types the firmware version.
 
-Because the German layout already has ä, ö, ü and ß as normal keys, several of the workarounds
-of `cozy` are not needed here: the "chameleon" Tab/ä key is a plain ä key,
-and the ANSI/Windows "quote mode" switch is gone, since the OS layout now decides
+Because the German layout already has ä, ö, ü and ß as normal keys, one workaround of `cozy`
+is not needed here: the ANSI/Windows "quote mode" switch is gone, since the OS layout now decides
 what the accent keys do. In exchange, some characters of `cozy` have no equivalent in `de(basic)`
 and are mapped to `KC_NO`; the head of `cozy_de/keymap.c` lists all of them with the reason.
 
@@ -168,6 +167,14 @@ The key overrides restore the Cozy Shift mapping on top of the German layout.
 The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`, `Shift 5 → %`,
 `Shift , → ;`, `Shift . → :` and `Shift - → _`; the other eight pairings
 (`@ # ß & * + ?` on the number row and `"` on the apostrophe key) are made by a key override each.
+
+One more key override keeps the "chameleon" ä key working: plain and with Shift it types ä and Ä,
+while `Ctrl+ä` and `Alt+ä` become `Ctrl+Tab` and `Alt+Tab`, so `Alt+Tab` stays the gesture it
+always was. Unlike the Shift overrides, this one suppresses no modifier, which is what lets you
+hold Alt and tap ä several times to walk through the window list.
+
+The right thumb key is a plain `Win+Tab` (expose / task view) rather than a Mod-Tap;
+the Gui modifier itself sits on the left thumb key, unchanged from `cozy`.
 
 A copy of the xkb sources of the assumed OS layout is in `reference/xkb/`,
 so that the AltGr mappings used in the keymap can be verified; see the README there.
