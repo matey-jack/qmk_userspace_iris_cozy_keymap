@@ -222,19 +222,52 @@ My workaround is to run `./qmk compile -km cozy` instead.
 This means that I don't need `qmk userspace-add` to set this up, 
 but I do need `qmk config user.overlay_dir=(where the user space is checked out)`.
 
-The Github Actions workflow runs the compile on every push, to any branch.
+The Github Actions workflow compiles both keymaps on every push, to any branch.
+`cozy` and `cozy_de` are versioned, tagged and released the same way, but on separate ladders.
 
-The workflow reads the `cozy_de` firmware version out of the `VERSION_STRING` in its `keymap.c`
-(the `[rR]ev[0-9]([0-9.]*[0-9])?` part of it) and uses it for two things:
+## Versions and tags
 
- - The built firmware is uploaded as a build artifact named `iris-cozy-de-${version}.uf2`,
-   so every branch build is downloadable without any tagging.
- - If a Git tag of that name already exists, the build **fails** — after uploading the artifact,
-   so you still get the firmware. Bump `VERSION_STRING` to make it pass.
+The workflow reads each keymap's version out of the `VERSION_STRING` in its own `keymap.c`.
+The version is the whole `rev...` token, suffix and all — `rev22.2-winkey-fix`, not `rev22.2` —
+so a tag says what changed, the way the hand-made tags used to. Two rules for writing one:
 
-On a push to `main` the workflow then creates the tag `${version}` and a GitHub Release with the
-`.uf2` attached. You should still go to that release and add some release notes,
-since none are added automatically.
+ - Put it at the end of the string. Extraction stops at the first character outside
+   `[0-9A-Za-z._-]`, so `"Layout ASDR_NILT standalone, rev22.2-winkey-fix"` yields the whole
+   suffix, while a trailing `", needs testing"` would be silently cut off.
+ - Anything that would make an illegal Git ref (a trailing `.`, a doubled `..`, a `.lock`
+   ending) is trimmed away rather than failing the build, so you cannot break the tag step by
+   mistyping a version.
+
+The tag is the keymap name plus that version: `cozy-rev22.2-winkey-fix`, `cozy_de-rev01`.
+Tags made before this scheme are unprefixed and their suffix was written by hand, so it does
+not always match the `VERSION_STRING` of the commit they point at.
+
+## What each push does
+
+ - Both firmwares are uploaded as build artifacts, `iris-cozy-${version}.uf2` and
+   `iris-cozy-de-${version}.uf2`, so every branch build is downloadable without any tagging.
+ - A keymap that **changed** in this branch and whose tag already exists fails the build —
+   after uploading the artifacts, so you still get the firmware. Bump its `VERSION_STRING`.
+   A keymap you did not touch never has to be bumped, so changing one keymap does not drag
+   the other's version along.
+ - A branch that changes nothing under `keyboards/` needs no version work at all.
+ - On a pull request the workflow comments the tags that merging will create, or says that it
+   will create none. It edits that one comment on every push, so a mistyped suffix or a
+   forgotten bump is visible and fixable long before the merge makes the tag real.
+
+## What a push to `main` does
+
+For every keymap that changed, a tag is created on the merge commit — so a push that changed
+both gets two tags. There is one Release, on the first of those tags (`cozy` before `cozy_de`),
+naming both firmware versions in its body.
+
+Both `.uf2` files are attached whether or not both changed, so a release is always a complete
+set of firmware. That means one of the two files can carry a version some earlier release
+already carried; the release date and tag tell the two apart.
+
+A push to `main` that touched nothing under `keyboards/` creates no tag and no release.
+
+You should still go to the release and add some notes, since none are added automatically.
 
 
 # Original QMK Readme follows

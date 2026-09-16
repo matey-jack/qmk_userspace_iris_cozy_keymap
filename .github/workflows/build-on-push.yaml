@@ -2,12 +2,19 @@ name: Build QMK firmware
 
 on:
     push: {}
+    # Only to catch a pull request opened after its branch was already pushed, which the
+    # `push` run cannot comment on because the pull request did not exist yet. `synchronize`
+    # is deliberately absent: every push already triggers a run. The build is skipped for
+    # these, so they cost one `version` job and one comment.
+    pull_request:
+        types: [opened, reopened]
     workflow_dispatch: {}
 
 permissions:
   contents: write
+  pull-requests: write
 
-# One run per branch at a time. The `release` job creates a Git tag, and two runs racing on
+# One run per branch at a time. The `release` job creates Git tags, and two runs racing on
 # `main` would both pass the version gate before either of them tags, so they must not overlap.
 # On `main` a queued run therefore waits instead of cancelling, so a release is never killed
 # half way through; on every other branch the newer push simply supersedes the older one.
@@ -16,49 +23,199 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  # Each keymap has its own version ladder, so each one gets its own version, its own tag and
+  # its own answer to "did this change at all". The two keymaps are handled by one job rather
+  # than by a matrix because matrix jobs overwrite each other's outputs.
   version:
-    name: 'Read firmware version'
+    name: 'Read firmware versions'
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.read.outputs.version }}
-      tag_exists: ${{ steps.tag.outputs.exists }}
-    env:
-      KEYMAP_C: keyboards/keebio/iris_ce/keymaps/cozy_de/keymap.c
+      cozy_version:       ${{ steps.read.outputs.cozy_version }}
+      cozy_tag_exists:    ${{ steps.read.outputs.cozy_tag_exists }}
+      cozy_changed:       ${{ steps.read.outputs.cozy_changed }}
+      cozy_de_version:    ${{ steps.read.outputs.cozy_de_version }}
+      cozy_de_tag_exists: ${{ steps.read.outputs.cozy_de_tag_exists }}
+      cozy_de_changed:    ${{ steps.read.outputs.cozy_de_changed }}
+      any_changed:        ${{ steps.read.outputs.any_changed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The change detection below diffs against `main` or against the previous tip of
+          # this branch, neither of which exists in the default depth-1 checkout.
+          fetch-depth: 0
 
-      - name: Extract the version string
+      - name: Read each keymap's version and see which keymaps changed
         id: read
+        env:
+          KEYMAP_DIR: keyboards/keebio/iris_ce/keymaps
+          PUSHED_BEFORE: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          version=$(grep -E '^#define[[:space:]]+VERSION_STRING' "$KEYMAP_C" \
-                    | grep -oE '[rR]ev[0-9]([0-9.]*[0-9])?' | head -n 1)
-          if [ -z "$version" ]; then
-            echo "::error file=$KEYMAP_C::VERSION_STRING has no [rR]ev[0-9]([0-9.]*[0-9])? version in it"
-            exit 1
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Firmware version: $version"
 
-      - name: Check whether that version was already released
-        id: tag
-        run: |
-          set -euo pipefail
-          if git ls-remote --tags --exit-code origin "refs/tags/${{ steps.read.outputs.version }}" > /dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+          # What to diff against. On `main` the question is "did this push change the keymap";
+          # on a branch it is "does this branch change the keymap", which is the question the
+          # pull request comment wants answered and the one that still holds after the merge.
+          # Hence the merge base (three dots) on a branch and the previous tip on `main`.
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            if [ -n "$PUSHED_BEFORE" ] \
+               && [ "$PUSHED_BEFORE" != "0000000000000000000000000000000000000000" ] \
+               && git cat-file -e "$PUSHED_BEFORE^{commit}" 2> /dev/null; then
+              range="$PUSHED_BEFORE..HEAD"
+            elif git rev-parse --verify --quiet 'HEAD^' > /dev/null; then
+              # `workflow_dispatch` carries no `before`, so fall back to the single commit.
+              range="HEAD^..HEAD"
+            else
+              range="$(git hash-object -t tree /dev/null)..HEAD"
+            fi
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            range="origin/main...HEAD"
           fi
+          echo "Comparing $range"
+
+          # Anything under `keyboards/` that is not inside one of the keymap directories is
+          # shared, so it counts as a change to both keymaps.
+          shared=$(git diff --name-only "$range" -- keyboards/ \
+                     ":(exclude)$KEYMAP_DIR/cozy" ":(exclude)$KEYMAP_DIR/cozy_de")
+          if [ -n "$shared" ]; then
+            echo "Shared files under keyboards/ changed, so both keymaps count as changed:"
+            echo "$shared" | sed 's/^/  /'
+          fi
+
+          any_changed=false
+          for km in cozy cozy_de; do
+            file="$KEYMAP_DIR/$km/keymap.c"
+
+            raw=$(grep -E '^#define[[:space:]]+VERSION_STRING' "$file" | head -n 1 || true)
+            version=$(printf '%s' "$raw" | grep -oE '[rR]ev[0-9][0-9A-Za-z._-]*' | head -n 1 || true)
+            if [ -z "$version" ]; then
+              echo "::error file=$file::VERSION_STRING has no rev<digit>... version in it"
+              exit 1
+            fi
+
+            # The whole token is the version, suffix included, so that a tag says what changed
+            # the way the hand-made tags used to. Trim it into something Git will accept as a
+            # ref rather than letting `git tag` reject it minutes later: a ref may not contain
+            # `..`, end in `.lock`, or end in a `.`. The character class above already ruled
+            # out spaces, `~^:?*[` and the rest, so this is all that is left to do.
+            version=$(printf '%s' "$version" | sed -E 's/\.{2,}/./g; s/\.lock$//; s/[._-]+$//')
+            tag="$km-$version"
+            # Never fires: the trim above makes the name legal by construction. It is here so
+            # that a future edit to either of them cannot quietly reintroduce a broken tag.
+            git check-ref-format "refs/tags/$tag"
+
+            if git ls-remote --tags --exit-code origin "refs/tags/$tag" > /dev/null 2>&1; then
+              tag_exists=true
+            else
+              tag_exists=false
+            fi
+
+            if [ -n "$shared" ] || [ -n "$(git diff --name-only "$range" -- "$KEYMAP_DIR/$km")" ]; then
+              changed=true
+              any_changed=true
+            else
+              changed=false
+            fi
+
+            {
+              echo "${km}_version=$version"
+              echo "${km}_tag_exists=$tag_exists"
+              echo "${km}_changed=$changed"
+            } >> "$GITHUB_OUTPUT"
+            echo "$km: tag=$tag already-released=$tag_exists changed=$changed"
+          done
+          echo "any_changed=$any_changed" >> "$GITHUB_OUTPUT"
+
+  # Says on the pull request what merging it will and will not release, so that a typo in a
+  # version suffix or a forgotten bump can be fixed while it is still cheap.
+  pr-comment:
+    name: 'Report the release preview'
+    needs: [version]
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          COZY_VERSION:       ${{ needs.version.outputs.cozy_version }}
+          COZY_TAG_EXISTS:    ${{ needs.version.outputs.cozy_tag_exists }}
+          COZY_CHANGED:       ${{ needs.version.outputs.cozy_changed }}
+          COZY_DE_VERSION:    ${{ needs.version.outputs.cozy_de_version }}
+          COZY_DE_TAG_EXISTS: ${{ needs.version.outputs.cozy_de_tag_exists }}
+          COZY_DE_CHANGED:    ${{ needs.version.outputs.cozy_de_changed }}
+          ANY_CHANGED:        ${{ needs.version.outputs.any_changed }}
+        with:
+          script: |
+            const MARKER = '<!-- release-preview -->';
+            const keymaps = [
+              { name: 'cozy',    version: process.env.COZY_VERSION,
+                changed: process.env.COZY_CHANGED === 'true',
+                released: process.env.COZY_TAG_EXISTS === 'true' },
+              { name: 'cozy_de', version: process.env.COZY_DE_VERSION,
+                changed: process.env.COZY_DE_CHANGED === 'true',
+                released: process.env.COZY_DE_TAG_EXISTS === 'true' },
+            ];
+
+            let body;
+            if (process.env.ANY_CHANGED !== 'true') {
+              body = [
+                MARKER,
+                '### Release preview',
+                '',
+                'This branch changes nothing under `keyboards/`, so merging it creates no tag',
+                'and no release. Both firmwares are still built, and downloadable from the',
+                'workflow run for the latest push.',
+              ].join('\n');
+            } else {
+              const rows = keymaps.map(k => {
+                if (!k.changed) return `| \`${k.name}\` | — unchanged, re-released as \`${k.version}\` |`;
+                if (k.released) return `| \`${k.name}\` | ⚠️ \`${k.name}-${k.version}\` is already released — bump \`VERSION_STRING\` |`;
+                return `| \`${k.name}\` | \`${k.name}-${k.version}\` |`;
+              });
+              body = [
+                MARKER,
+                '### Release preview',
+                '',
+                '| keymap | tag created on merge |',
+                '|---|---|',
+                ...rows,
+                '',
+                keymaps.some(k => k.changed && k.released)
+                  ? 'The build fails until that version is bumped, so nothing is released yet.'
+                  : 'Merging creates one release, on the first tag above, carrying both firmware files.',
+              ].join('\n');
+            }
+
+            const { owner, repo } = context.repo;
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit(
+              { owner, repo, commit_sha: context.sha });
+
+            for (const pr of prs.filter(p => p.state === 'open')) {
+              try {
+                const comments = await github.paginate(github.rest.issues.listComments,
+                  { owner, repo, issue_number: pr.number, per_page: 100 });
+                // Edit the one comment this workflow owns rather than adding one per push.
+                const mine = comments.find(c => c.body && c.body.includes(MARKER));
+                if (!mine) {
+                  await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+                } else if (mine.body.trim() !== body.trim()) {
+                  await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+                }
+              } catch (err) {
+                // A pull request from a fork gets a read-only token. The preview is a
+                // convenience, so say so and move on rather than failing the run.
+                core.warning(`Could not comment on #${pr.number}: ${err.message}`);
+              }
+            }
 
   build:
     name: 'QMK Userspace Build'
+    if: github.event_name != 'pull_request'
     uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
     with:
       qmk_repo: qmk/qmk_firmware
       qmk_ref: master
 
-  # Renames the `cozy_de` firmware to a downloadable name and *then* enforces the version gate,
-  # so that a build whose version was already released still leaves its artifact behind.
+  # Renames both firmwares to downloadable names and *then* enforces the version gate, so that
+  # a build whose version was already released still leaves its artifacts behind.
   package:
     name: 'Package firmware'
     needs: [version, build]
@@ -70,76 +227,167 @@ jobs:
           name: Firmware
           path: firmware
 
-      - name: Rename the cozy_de firmware
+      - name: Rename both firmwares
+        env:
+          COZY_VERSION:    ${{ needs.version.outputs.cozy_version }}
+          COZY_DE_VERSION: ${{ needs.version.outputs.cozy_de_version }}
         run: |
           set -euo pipefail
-          src=$(find firmware -name '*cozy_de*.uf2' | head -n 1)
-          if [ -z "$src" ]; then
-            echo "::error::The build produced no *cozy_de*.uf2 file"
+          mkdir -p dist
+
+          # `*cozy*` matches the cozy_de build as well, so the cozy lookup has to exclude it.
+          cozy_src=$(find firmware -name '*cozy*.uf2' ! -name '*cozy_de*' | head -n 1)
+          cozy_de_src=$(find firmware -name '*cozy_de*.uf2' | head -n 1)
+          if [ -z "$cozy_src" ] || [ -z "$cozy_de_src" ]; then
+            echo "::error::The build did not produce both .uf2 files (cozy='$cozy_src', cozy_de='$cozy_de_src')"
             find firmware -type f
             exit 1
           fi
-          mkdir -p dist
-          cp "$src" "dist/iris-cozy-de-${{ needs.version.outputs.version }}.uf2"
+
+          cp "$cozy_src"    "dist/iris-cozy-$COZY_VERSION.uf2"
+          cp "$cozy_de_src" "dist/iris-cozy-de-$COZY_DE_VERSION.uf2"
           ls -l dist
 
-      - name: Upload the firmware
+      - name: Upload the cozy firmware
         uses: actions/upload-artifact@v4
         with:
-          name: iris-cozy-de-${{ needs.version.outputs.version }}
-          path: dist/*.uf2
+          name: iris-cozy-${{ needs.version.outputs.cozy_version }}
+          path: dist/iris-cozy-${{ needs.version.outputs.cozy_version }}.uf2
           if-no-files-found: error
 
-      - name: Fail if this version was already released
-        if: needs.version.outputs.tag_exists == 'true'
+      - name: Upload the cozy_de firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: iris-cozy-de-${{ needs.version.outputs.cozy_de_version }}
+          path: dist/iris-cozy-de-${{ needs.version.outputs.cozy_de_version }}.uf2
+          if-no-files-found: error
+
+      # Only a keymap that actually changed has to carry a fresh version. A branch that leaves
+      # `keyboards/` alone passes with no version work at all, and a change to one keymap never
+      # demands a bump from the other.
+      - name: Fail if a changed keymap still carries a released version
+        env:
+          COZY_VERSION:       ${{ needs.version.outputs.cozy_version }}
+          COZY_TAG_EXISTS:    ${{ needs.version.outputs.cozy_tag_exists }}
+          COZY_CHANGED:       ${{ needs.version.outputs.cozy_changed }}
+          COZY_DE_VERSION:    ${{ needs.version.outputs.cozy_de_version }}
+          COZY_DE_TAG_EXISTS: ${{ needs.version.outputs.cozy_de_tag_exists }}
+          COZY_DE_CHANGED:    ${{ needs.version.outputs.cozy_de_changed }}
         run: |
-          echo "::error::Tag ${{ needs.version.outputs.version }} already exists. Bump VERSION_STRING in keymap.c."
-          exit 1
+          set -euo pipefail
+          stale=""
+          if [ "$COZY_CHANGED" = true ] && [ "$COZY_TAG_EXISTS" = true ]; then
+            stale="$stale cozy-$COZY_VERSION"
+          fi
+          if [ "$COZY_DE_CHANGED" = true ] && [ "$COZY_DE_TAG_EXISTS" = true ]; then
+            stale="$stale cozy_de-$COZY_DE_VERSION"
+          fi
+          if [ -n "$stale" ]; then
+            echo "::error::Changed, but already released:$stale. Bump VERSION_STRING in the keymap.c of each."
+            exit 1
+          fi
+          echo 'No changed keymap carries an already-released version.'
 
   # Replaces the old `publish` job, which only ran for pushed tags. Since every push to `main`
-  # now has to carry a version that was never released, `main` can create its own tag.
+  # that touches a keymap now has to carry a version that was never released, `main` can create
+  # its own tags.
   release:
     name: 'Tag and release'
     needs: [version, package]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.version.outputs.any_changed == 'true'
     runs-on: ubuntu-latest
+    env:
+      COZY_VERSION:    ${{ needs.version.outputs.cozy_version }}
+      COZY_CHANGED:    ${{ needs.version.outputs.cozy_changed }}
+      COZY_DE_VERSION: ${{ needs.version.outputs.cozy_de_version }}
+      COZY_DE_CHANGED: ${{ needs.version.outputs.cozy_de_changed }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download the packaged firmware
+      - name: Download the packaged cozy firmware
         uses: actions/download-artifact@v4
         with:
-          name: iris-cozy-de-${{ needs.version.outputs.version }}
+          name: iris-cozy-${{ needs.version.outputs.cozy_version }}
           path: dist
 
-      # The `version` job checked that this tag did not exist, but that was several minutes and
-      # one firmware build ago, so check again here rather than trusting the earlier answer.
-      - name: Create the tag
-        env:
-          VERSION: ${{ needs.version.outputs.version }}
+      - name: Download the packaged cozy_de firmware
+        uses: actions/download-artifact@v4
+        with:
+          name: iris-cozy-de-${{ needs.version.outputs.cozy_de_version }}
+          path: dist
+
+      # One tag per changed keymap, all on this commit. The `version` job checked that these
+      # tags did not exist, but that was several minutes and one firmware build ago, so check
+      # again here rather than trusting the earlier answer.
+      - name: Create the tags
         run: |
           set -euo pipefail
-          existing=$(git ls-remote --tags origin "refs/tags/$VERSION^{}" | awk '{print $1}')
-          if [ -z "$existing" ]; then
-            existing=$(git ls-remote --tags origin "refs/tags/$VERSION" | awk '{print $1}')
-          fi
-          if [ -n "$existing" ]; then
-            if [ "$existing" = "$GITHUB_SHA" ]; then
-              echo "Tag $VERSION already points at $GITHUB_SHA; leaving it alone."
-              exit 0
-            fi
-            echo "::error::Tag $VERSION already exists and points at $existing, not at $GITHUB_SHA."
-            exit 1
-          fi
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git tag -a "$VERSION" -m "Firmware $VERSION"
-          git push origin "refs/tags/$VERSION"
+
+          create_tag() {
+            tag=$1
+            existing=$(git ls-remote --tags origin "refs/tags/$tag^{}" | awk '{print $1}')
+            if [ -z "$existing" ]; then
+              existing=$(git ls-remote --tags origin "refs/tags/$tag" | awk '{print $1}')
+            fi
+            if [ -n "$existing" ]; then
+              if [ "$existing" = "$GITHUB_SHA" ]; then
+                echo "Tag $tag already points at $GITHUB_SHA; leaving it alone."
+                return 0
+              fi
+              echo "::error::Tag $tag already exists and points at $existing, not at $GITHUB_SHA."
+              return 1
+            fi
+            git tag -a "$tag" -m "Firmware $tag"
+            git push origin "refs/tags/$tag"
+          }
+
+          if [ "$COZY_CHANGED" = true ]; then
+            create_tag "cozy-$COZY_VERSION"
+          fi
+          if [ "$COZY_DE_CHANGED" = true ]; then
+            create_tag "cozy_de-$COZY_DE_VERSION"
+          fi
+
+      # Both keymaps are released together even when only one of them changed, so a release is
+      # always a complete set of firmware. That means one of the two files can carry a version
+      # that an earlier release already carried; the release date and tag tell them apart.
+      - name: Describe the release
+        id: describe
+        run: |
+          set -euo pipefail
+
+          # One release, on the first tag created, in a fixed keymap order so that which tag
+          # carries it never depends on anything but which keymaps changed.
+          if [ "$COZY_CHANGED" = true ]; then
+            tag="cozy-$COZY_VERSION"
+          else
+            tag="cozy_de-$COZY_DE_VERSION"
+          fi
+
+          cozy_note=""
+          cozy_de_note=""
+          if [ "$COZY_CHANGED" != true ]; then cozy_note=" (unchanged since its own release)"; fi
+          if [ "$COZY_DE_CHANGED" != true ]; then cozy_de_note=" (unchanged since its own release)"; fi
+
+          {
+            echo "tag=$tag"
+            echo "name=cozy $COZY_VERSION / cozy_de $COZY_DE_VERSION"
+            echo 'body<<RELEASE_BODY_EOF'
+            echo 'Firmware in this release:'
+            echo
+            echo "- \`cozy\`: **$COZY_VERSION**$cozy_note"
+            echo "- \`cozy_de\`: **$COZY_DE_VERSION**$cozy_de_note"
+            echo 'RELEASE_BODY_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Generate Release
         uses: softprops/action-gh-release@v2
         with:
             token: ${{ github.token }}
-            tag_name: ${{ needs.version.outputs.version }}
+            tag_name: ${{ steps.describe.outputs.tag }}
+            name: ${{ steps.describe.outputs.name }}
+            body: ${{ steps.describe.outputs.body }}
             fail_on_unmatched_files: true
             files: dist/*.uf2
