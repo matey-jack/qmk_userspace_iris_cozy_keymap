@@ -2,10 +2,11 @@ name: Build QMK firmware
 
 on:
     push: {}
-    # Only to catch a pull request opened after its branch was already pushed, which the
-    # `push` run cannot comment on because the pull request did not exist yet. `synchronize`
-    # is deliberately absent: every push already triggers a run. The build is skipped for
-    # these, so they cost one `version` job and one comment.
+    # Where the preview comment normally comes from. A branch is pushed before its pull
+    # request is opened, so by then the `push` run has usually been and gone with no pull
+    # request to comment on. `synchronize` is deliberately absent: every later push already
+    # triggers a run of its own. The build is skipped for these, so they cost one `version`
+    # job and one comment.
     pull_request:
         types: [opened, reopened]
     workflow_dispatch: {}
