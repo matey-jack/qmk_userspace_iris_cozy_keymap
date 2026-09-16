@@ -185,24 +185,31 @@ jobs:
             }
 
             const { owner, repo } = context.repo;
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit(
-              { owner, repo, commit_sha: context.sha });
+            // On a `pull_request` event `context.sha` is the ephemeral merge commit, which no
+            // pull request is associated with, so the number has to come from the payload. On a
+            // push there is no payload to read and the commit is the branch tip, which is.
+            const numbers = context.payload.pull_request
+              ? [context.payload.pull_request.number]
+              : (await github.rest.repos.listPullRequestsAssociatedWithCommit(
+                  { owner, repo, commit_sha: context.sha }))
+                  .data.filter(p => p.state === 'open').map(p => p.number);
+            core.info(`Commenting on: ${numbers.length ? numbers.join(', ') : '(no open pull request)'}`);
 
-            for (const pr of prs.filter(p => p.state === 'open')) {
+            for (const number of numbers) {
               try {
                 const comments = await github.paginate(github.rest.issues.listComments,
-                  { owner, repo, issue_number: pr.number, per_page: 100 });
+                  { owner, repo, issue_number: number, per_page: 100 });
                 // Edit the one comment this workflow owns rather than adding one per push.
                 const mine = comments.find(c => c.body && c.body.includes(MARKER));
                 if (!mine) {
-                  await github.rest.issues.createComment({ owner, repo, issue_number: pr.number, body });
+                  await github.rest.issues.createComment({ owner, repo, issue_number: number, body });
                 } else if (mine.body.trim() !== body.trim()) {
                   await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
                 }
               } catch (err) {
                 // A pull request from a fork gets a read-only token. The preview is a
                 // convenience, so say so and move on rather than failing the run.
-                core.warning(`Could not comment on #${pr.number}: ${err.message}`);
+                core.warning(`Could not comment on #${number}: ${err.message}`);
               }
             }
 
