@@ -246,26 +246,33 @@ not always match the `VERSION_STRING` of the commit they point at.
 
  - Both firmwares are uploaded as build artifacts, `iris-cozy-${version}.uf2` and
    `iris-cozy-de-${version}.uf2`, so every branch build is downloadable without any tagging.
- - A keymap that **changed** in this branch and whose tag already exists fails the build —
-   after uploading the artifacts, so you still get the firmware. Bump its `VERSION_STRING`.
-   A keymap you did not touch never has to be bumped, so changing one keymap does not drag
-   the other's version along.
- - A branch that changes nothing under `keyboards/` needs no version work at all.
+ - A keymap that **changed** and whose version is still the released one is not an error: it
+   is simply not released. Nothing fails over it, and the build says so in the run summary.
+   A comment, a refactor or a doc fix nobody has to reflash for therefore costs no bump —
+   a release is something you ask for, by bumping `VERSION_STRING`.
+ - A keymap you did not touch never has to be bumped, so changing one keymap does not drag
+   the other's version along, and a branch that changes nothing under `keyboards/` needs no
+   version work at all.
  - On a pull request the workflow comments the tags that merging will create, or says that it
-   will create none. It edits that one comment on every push, so a mistyped suffix or a
-   forgotten bump is visible and fixable long before the merge makes the tag real.
+   will create none and how to change that. It edits that one comment on every push, so a
+   mistyped suffix or a forgotten bump is visible and fixable long before the merge, and the
+   comment never blocks the merge.
 
 ## What a push to `main` does
 
-For every keymap that changed, a tag is created on the merge commit — so a push that changed
-both gets two tags. There is one Release, on the first of those tags (`cozy` before `cozy_de`),
-naming both firmware versions in its body.
+For every keymap that changed **and** carries a version that was never tagged, a tag is created
+on the merge commit — so a push that bumped both gets two tags. There is one Release, on the
+first of those tags (`cozy` before `cozy_de`), naming both firmware versions in its body.
 
-Both `.uf2` files are attached whether or not both changed, so a release is always a complete
-set of firmware. That means one of the two files can carry a version some earlier release
-already carried; the release date and tag tell the two apart.
+Both `.uf2` files are attached whether or not both were tagged, so a release is always a
+complete set of firmware. That means one of the two files can carry a version some earlier
+release already carried; the release date and tag tell the two apart, and the release body
+says which of the two rode along rather than being released in its own right.
 
-A push to `main` that touched nothing under `keyboards/` creates no tag and no release.
+A push to `main` creates no tag and no release when it touched nothing under `keyboards/`, and
+likewise when every keymap it did touch still carries an already-released version. The firmware
+is built either way and downloadable from the workflow run, so the only thing a missing bump
+costs you is the Release entry.
 
 You should still go to the release and add some notes, since none are added automatically.
 
