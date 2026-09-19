@@ -1,6 +1,8 @@
 # Plan: running `cozy_de` on stock Vial firmware
 
-**Status:** research done, nothing built yet. Written 2026-09-19.
+**Status:** files written, not yet tried on hardware. Written 2026-09-19.
+The decisions this plan asked for have been made — see [§7](#7-decisions). What is left is
+flashing the firmware and the test pass in [§6](#6-order-of-work).
 
 **Goal (as stated):** flash unmodified Vial firmware onto the Iris CE, then seed it with the
 `cozy_de` keymap from a `.vil` file plus a small script that sets the things a `.vil` does not
@@ -184,7 +186,8 @@ the failure mode the comment in `keymap.c` warns about. Same for `M3`, `M4`, `M7
 would land on E1's unassigned level 4 and produce nothing.
 
 This only bites if you hold Shift while pressing a macro that is documented to make minuscules
-only, so I propose we accept it and note it in the README rather than paper over it. (`Up(KC_LSFT)`
+only, so it is accepted rather than papered over, and written down in the
+[README](README.md#what-differs-from-the-compiled-keymap). (`Up(KC_LSFT)`
 at the top of each macro would clear the report bit, but it would not restore it afterwards, which
 is worse.) Caps Word parks a weak Shift the same way, so the macros should not be used inside
 Caps Word either — in the compiled firmware Caps Word stops on them, here it will not.
@@ -218,7 +221,7 @@ gone. A `Text(...)` macro is also the wrong tool: the firmware's `SEND_STRING` t
 one (`sendstring_german.h` is a compile-time include), so `-` and `,` would come out as ß and
 friends on a German OS layout.
 
-Two options, my recommendation first:
+**Decided: dropped.** It is `KC_NO` on L_FN in the `.vil`. For the record, the alternative was:
 
 1. **Drop it.** Its whole purpose was to tell which compiled firmware is on the board, and the
    point of this exercise is that there is no longer a per-keymap build to identify.
@@ -243,8 +246,9 @@ be had:
   itself, so the animation drops in the same way — but it ends the "nothing to maintain" premise:
   every `vial-qmk` update would need the patch reapplied.
 
-Worth deciding before the build in [step 1](#step-1-get-the-firmware), since it is the one thing
-that changes what you compile.
+**Decided: the standard effects.** Nothing about RGB is pinned in `seed-cozy-de.sh` — it
+persists on its own once set — but the script carries a commented `vitaly rgb` line showing how
+to fix an effect and colour if you want them reproducible.
 
 ---
 
@@ -264,11 +268,25 @@ that changes what you compile.
 
 ## 5. Deliverables
 
-Both go in this folder:
+Both are now in this folder, alongside a [`README.md`](README.md) covering day-to-day use:
 
-- **`cozy_de.vil`** — 4 layers × 10 rows × 6 cols of keycode strings, plus the nine macros, the
-  nine key overrides and the Caps Word combo.
-- **`seed-cozy-de.sh`** — unlock, load the `.vil`, then set what the `.vil` does not carry.
+- **[`cozy_de.vil`](cozy_de.vil)** — 4 layers × 10 rows × 6 cols of keycode strings, plus the
+  nine macros, the nine key overrides and the Caps Word combo.
+- **[`seed-cozy-de.sh`](seed-cozy-de.sh)** — unlock, load the `.vil`, then set what the `.vil`
+  does not carry.
+
+The `.vil` was generated from `cozy_de/keymap.c` by a throwaway script, not kept: the conversion
+happens once, and an unmaintained generator in the repo would rot. What the generator checked is
+worth recording, though, because it is what makes the file trustworthy without a keyboard to
+test on:
+
+- every one of the 240 cells and every macro, override and combo keycode was evaluated with a
+  local reimplementation of Vial's own `AnyKeycode` parser, so each string is one Vial can read;
+- the German aliases were resolved out of `keymap_german.h` rather than typed by hand, which is
+  what keeps the Qwertz swap (`DE_Y` is `KC_Z`, `DE_Z` is `KC_Y`) honest;
+- the LAYOUT-index → matrix map was taken from `keyboard.json` and cross-checked against the
+  56 `row,col` labels in `vial.json`, which list the same cells in a different (visual) order;
+- the `uid` is `VIAL_KEYBOARD_UID` read back as a little-endian `uint64`, matching the firmware.
 
 `vitaly load` restores macros, key overrides, alt-repeat keys, combos, tap dances and keys —
 but its output does not mention settings, so the script sets those explicitly. (Vial GUI's own
@@ -317,11 +335,9 @@ The four unused cells — `4,0`, `4,1`, `9,0`, `9,1` — are written as `-1` in 
 
 1. Build and flash `keebio/iris_ce/rev1:vial` from `vial-qmk`, both halves. ([step 1](#step-1-get-the-firmware))
 2. `vitaly devices` — confirm the product id and that the board answers.
-3. Generate `cozy_de.vil` from `cozy_de/keymap.c`. Worth doing with a small script rather than
-   by hand: the layer arrays are already a clean table, and a generator keeps the `.vil` and the
-   C keymap from drifting apart. Decide whether that script lives here too.
+3. ~~Generate `cozy_de.vil`~~ — **done**, see §5.
 4. `vitaly load -f cozy_de.vil -p` to preview before writing anything.
-5. Write and run `seed-cozy-de.sh`.
+5. ~~Write~~ **done**, and run `seed-cozy-de.sh`.
 6. Test pass, against the README's own list: the Shift mapping of the number row, the ä/Tab
    chameleon under Ctrl/Alt/Gui, the five accent macros, ^ and `, the Level-5 items (¢ £ and
    `DE_LVL5` itself), Caps Word via the new combo, and the 500 ms tapping term on the four
@@ -347,17 +363,18 @@ on. `vial-qmk` tracks QMK with a lag; its `quantum/keycodes.h` is from 2025 and 
 
 ---
 
-## 7. Open questions
+## 7. Decisions
 
-1. **`MX_VERS`** — drop it (my recommendation) or keep a hand-maintained tap sequence? §3.3
-2. **Generate or hand-write the `.vil`?** I lean towards a generator script checked in next to
-   the `.vil`, so the two keymaps cannot drift. §6 step 3
-3. **Does `cozy_de` stay?** This plan does not touch the existing keymaps. If Vial becomes the
-   daily driver, `cozy_de/keymap.c` turns into the reference the `.vil` is generated from —
-   worth saying so in the README either way.
-4. **The key-groups colour mode** — answered in `793c361`: it lives in your QMK fork, so stock
-   Vial cannot have it. The open part is now which way to go, accept the standard effects or
-   carry the patch into `vial-qmk`. §3.4
+1. **`MX_VERS`** — dropped. `KC_NO` in its place on L_FN. §3.3
+2. **Generator script** — written but not kept. The conversion happens once; a generator nobody
+   reruns would only rot. §5 records what it verified.
+3. **`cozy_de` is the basis.** The `.vil` was generated from `cozy_de/keymap.c`, and from here
+   on the `.vil` is the one that gets edited — in the Vial GUI, saved back over the file. The
+   two will drift, and that is fine: the C keymap is the fallback for if Vial does not work out,
+   not a source that keeps being re-converted.
+4. **The key-groups colour mode** — let it go, and use the standard RGB effects. Carrying the
+   fork's patch into `vial-qmk` was the alternative; it would have ended the "nothing to
+   maintain" premise that makes this whole exercise worth it. §3.4
 
 ---
 
