@@ -26,6 +26,8 @@
 #define UNICODE_SELECTED_MODES      UNICODE_MODE_WINDOWS
 
 // RGB_MATRIX_SOLID_COLOR ==> is always on (has no ENABLE_ flag)
+
+// This flag only works when compiling the keymap against my own fork of QMK which has this new color mode.
 #define ENABLE_RGB_MATRIX_KEY_GROUPS
 
 // Disable all other animations so that we can simply toggle between the solid color and the mods&toggles.
