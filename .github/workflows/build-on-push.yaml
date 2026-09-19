@@ -16,7 +16,7 @@ permissions:
   pull-requests: write
 
 # One run per branch at a time. The `release` job creates Git tags, and two runs racing on
-# `main` would both pass the version gate before either of them tags, so they must not overlap.
+# `main` would both see a tag missing before either of them creates it, so they must not overlap.
 # On `main` a queued run therefore waits instead of cancelling, so a release is never killed
 # half way through; on every other branch the newer push simply supersedes the older one.
 concurrency:
@@ -34,10 +34,13 @@ jobs:
       cozy_version:       ${{ steps.read.outputs.cozy_version }}
       cozy_tag_exists:    ${{ steps.read.outputs.cozy_tag_exists }}
       cozy_changed:       ${{ steps.read.outputs.cozy_changed }}
+      cozy_release:       ${{ steps.read.outputs.cozy_release }}
       cozy_de_version:    ${{ steps.read.outputs.cozy_de_version }}
       cozy_de_tag_exists: ${{ steps.read.outputs.cozy_de_tag_exists }}
       cozy_de_changed:    ${{ steps.read.outputs.cozy_de_changed }}
+      cozy_de_release:    ${{ steps.read.outputs.cozy_de_release }}
       any_changed:        ${{ steps.read.outputs.any_changed }}
+      any_release:        ${{ steps.read.outputs.any_release }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,6 +86,7 @@ jobs:
           fi
 
           any_changed=false
+          any_release=false
           for km in cozy cozy_de; do
             file="$KEYMAP_DIR/$km/keymap.c"
 
@@ -117,17 +121,34 @@ jobs:
               changed=false
             fi
 
+            # A keymap is released only when it changed *and* carries a version that was never
+            # tagged. A change that leaves the version alone is not an error, it is a decision:
+            # a comment, a refactor or a doc tweak nobody has to reflash for. It simply goes
+            # unreleased, and its firmware is downloadable from this run's artifacts.
+            if [ "$changed" = true ] && [ "$tag_exists" = false ]; then
+              release=true
+              any_release=true
+            else
+              release=false
+            fi
+
             {
               echo "${km}_version=$version"
               echo "${km}_tag_exists=$tag_exists"
               echo "${km}_changed=$changed"
+              echo "${km}_release=$release"
             } >> "$GITHUB_OUTPUT"
-            echo "$km: tag=$tag already-released=$tag_exists changed=$changed"
+            echo "$km: tag=$tag already-released=$tag_exists changed=$changed will-release=$release"
           done
-          echo "any_changed=$any_changed" >> "$GITHUB_OUTPUT"
+          {
+            echo "any_changed=$any_changed"
+            echo "any_release=$any_release"
+          } >> "$GITHUB_OUTPUT"
 
   # Says on the pull request what merging it will and will not release, so that a typo in a
-  # version suffix or a forgotten bump can be fixed while it is still cheap.
+  # version suffix or a bump you did want is fixed while it is still cheap. It never gates the
+  # merge: not bumping a version is a legitimate answer, and this comment is how you notice
+  # that you gave it.
   pr-comment:
     name: 'Report the release preview'
     needs: [version]
@@ -166,10 +187,15 @@ jobs:
                 'workflow run for the latest push.',
               ].join('\n');
             } else {
+              // Only a changed keymap carrying a never-tagged version is released; the other
+              // three combinations are all fine, so each row says what merging does, not what
+              // is wrong with the branch.
+              const anyRelease = keymaps.some(k => k.changed && !k.released);
               const rows = keymaps.map(k => {
-                if (!k.changed) return `| \`${k.name}\` | — unchanged, re-released as \`${k.version}\` |`;
-                if (k.released) return `| \`${k.name}\` | ⚠️ \`${k.name}-${k.version}\` is already released — bump \`VERSION_STRING\` |`;
-                return `| \`${k.name}\` | \`${k.name}-${k.version}\` |`;
+                if (k.changed && !k.released) return `| \`${k.name}\` | \`${k.name}-${k.version}\` |`;
+                if (k.changed) return `| \`${k.name}\` | — none: \`${k.version}\` is already released |`;
+                if (anyRelease) return `| \`${k.name}\` | — unchanged, re-released as \`${k.version}\` |`;
+                return `| \`${k.name}\` | — unchanged |`;
               });
               body = [
                 MARKER,
@@ -179,9 +205,11 @@ jobs:
                 '|---|---|',
                 ...rows,
                 '',
-                keymaps.some(k => k.changed && k.released)
-                  ? 'The build fails until that version is bumped, so nothing is released yet.'
-                  : 'Merging creates one release, on the first tag above, carrying both firmware files.',
+                anyRelease
+                  ? 'Merging creates one release, on the first tag above, carrying both firmware files.'
+                  : 'No version was bumped, so merging this creates no tag and no release. Both firmwares'
+                    + ' are still built, and downloadable from the workflow run for the latest push. If you'
+                    + ' do want a release, bump `VERSION_STRING` in the `keymap.c` of a changed keymap.',
               ].join('\n');
             }
 
@@ -222,8 +250,8 @@ jobs:
       qmk_repo: qmk/qmk_firmware
       qmk_ref: master
 
-  # Renames both firmwares to downloadable names and *then* enforces the version gate, so that
-  # a build whose version was already released still leaves its artifacts behind.
+  # Renames both firmwares to downloadable names. Nothing in here fails over a version: an
+  # unbumped keymap goes unreleased, and these artifacts are how you get its firmware anyway.
   package:
     name: 'Package firmware'
     needs: [version, build]
@@ -270,10 +298,10 @@ jobs:
           path: dist/iris-cozy-de-${{ needs.version.outputs.cozy_de_version }}.uf2
           if-no-files-found: error
 
-      # Only a keymap that actually changed has to carry a fresh version. A branch that leaves
-      # `keyboards/` alone passes with no version work at all, and a change to one keymap never
-      # demands a bump from the other.
-      - name: Fail if a changed keymap still carries a released version
+      # A changed keymap that is still on a released version used to fail the build, which made
+      # every comment fix cost a version bump. It is a notice now: the run is green, the two
+      # artifacts above are the firmware, and only the tag and the Release are withheld.
+      - name: Say which changed keymaps will not be released
         env:
           COZY_VERSION:       ${{ needs.version.outputs.cozy_version }}
           COZY_TAG_EXISTS:    ${{ needs.version.outputs.cozy_tag_exists }}
@@ -283,32 +311,48 @@ jobs:
           COZY_DE_CHANGED:    ${{ needs.version.outputs.cozy_de_changed }}
         run: |
           set -euo pipefail
-          stale=""
-          if [ "$COZY_CHANGED" = true ] && [ "$COZY_TAG_EXISTS" = true ]; then
-            stale="$stale cozy-$COZY_VERSION"
-          fi
-          if [ "$COZY_DE_CHANGED" = true ] && [ "$COZY_DE_TAG_EXISTS" = true ]; then
-            stale="$stale cozy_de-$COZY_DE_VERSION"
-          fi
-          if [ -n "$stale" ]; then
-            echo "::error::Changed, but already released:$stale. Bump VERSION_STRING in the keymap.c of each."
-            exit 1
-          fi
-          echo 'No changed keymap carries an already-released version.'
 
-  # Replaces the old `publish` job, which only ran for pushed tags. Since every push to `main`
-  # that touches a keymap now has to carry a version that was never released, `main` can create
-  # its own tags.
+          held=""
+          lines=""
+          # $1 keymap, $2 version, $3 did it change, $4 is its tag already out there
+          note_held() {
+            if [ "$3" = true ] && [ "$4" = true ]; then
+              held="$held $1-$2"
+              lines="$lines
+          - \`$1\` changed, but \`$2\` is already released, so no tag is created for it."
+            fi
+          }
+          note_held cozy    "$COZY_VERSION"    "$COZY_CHANGED"    "$COZY_TAG_EXISTS"
+          note_held cozy_de "$COZY_DE_VERSION" "$COZY_DE_CHANGED" "$COZY_DE_TAG_EXISTS"
+
+          if [ -z "$held" ]; then
+            echo 'Every changed keymap carries a version that was never released.'
+            exit 0
+          fi
+
+          echo "::notice::Changed but already released:$held. Merging to main releases nothing for these; bump VERSION_STRING in the keymap.c of each if you want a release."
+          {
+            echo '### Not released'
+            echo "$lines"
+            echo
+            echo "The firmware is in this run's artifacts either way. Bump \`VERSION_STRING\` for a release."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # Replaces the old `publish` job, which only ran for pushed tags: `main` creates its own tags
+  # now. A push whose changed keymaps all still carry released versions releases nothing and
+  # skips this job entirely, which is how a comment-only change stays free.
   release:
     name: 'Tag and release'
     needs: [version, package]
-    if: github.ref == 'refs/heads/main' && needs.version.outputs.any_changed == 'true'
+    if: github.ref == 'refs/heads/main' && needs.version.outputs.any_release == 'true'
     runs-on: ubuntu-latest
     env:
       COZY_VERSION:    ${{ needs.version.outputs.cozy_version }}
       COZY_CHANGED:    ${{ needs.version.outputs.cozy_changed }}
+      COZY_RELEASE:    ${{ needs.version.outputs.cozy_release }}
       COZY_DE_VERSION: ${{ needs.version.outputs.cozy_de_version }}
       COZY_DE_CHANGED: ${{ needs.version.outputs.cozy_de_changed }}
+      COZY_DE_RELEASE: ${{ needs.version.outputs.cozy_de_release }}
     steps:
       - uses: actions/checkout@v4
 
@@ -324,9 +368,9 @@ jobs:
           name: iris-cozy-de-${{ needs.version.outputs.cozy_de_version }}
           path: dist
 
-      # One tag per changed keymap, all on this commit. The `version` job checked that these
-      # tags did not exist, but that was several minutes and one firmware build ago, so check
-      # again here rather than trusting the earlier answer.
+      # One tag per keymap that changed *and* was bumped, all on this commit. The `version` job
+      # checked that these tags did not exist, but that was several minutes and one firmware
+      # build ago, so check again here rather than trusting the earlier answer.
       - name: Create the tags
         run: |
           set -euo pipefail
@@ -351,14 +395,14 @@ jobs:
             git push origin "refs/tags/$tag"
           }
 
-          if [ "$COZY_CHANGED" = true ]; then
+          if [ "$COZY_RELEASE" = true ]; then
             create_tag "cozy-$COZY_VERSION"
           fi
-          if [ "$COZY_DE_CHANGED" = true ]; then
+          if [ "$COZY_DE_RELEASE" = true ]; then
             create_tag "cozy_de-$COZY_DE_VERSION"
           fi
 
-      # Both keymaps are released together even when only one of them changed, so a release is
+      # Both keymaps are released together even when only one of them got a tag, so a release is
       # always a complete set of firmware. That means one of the two files can carry a version
       # that an earlier release already carried; the release date and tag tell them apart.
       - name: Describe the release
@@ -367,17 +411,27 @@ jobs:
           set -euo pipefail
 
           # One release, on the first tag created, in a fixed keymap order so that which tag
-          # carries it never depends on anything but which keymaps changed.
-          if [ "$COZY_CHANGED" = true ]; then
+          # carries it never depends on anything but which keymaps were released.
+          if [ "$COZY_RELEASE" = true ]; then
             tag="cozy-$COZY_VERSION"
           else
             tag="cozy_de-$COZY_DE_VERSION"
           fi
 
-          cozy_note=""
-          cozy_de_note=""
-          if [ "$COZY_CHANGED" != true ]; then cozy_note=" (unchanged since its own release)"; fi
-          if [ "$COZY_DE_CHANGED" != true ]; then cozy_de_note=" (unchanged since its own release)"; fi
+          # Two ways to end up in a release without a tag of your own: untouched, or touched
+          # without a version bump. The second one is worth saying out loud, because the file
+          # then differs from the identically versioned one in an earlier release.
+          note_for() {
+            if [ "$1" = true ]; then
+              printf ''
+            elif [ "$2" = true ]; then
+              printf ' (changed, but its version was not bumped, so it got no tag of its own)'
+            else
+              printf ' (unchanged since its own release)'
+            fi
+          }
+          cozy_note=$(note_for "$COZY_RELEASE" "$COZY_CHANGED")
+          cozy_de_note=$(note_for "$COZY_DE_RELEASE" "$COZY_DE_CHANGED")
 
           {
             echo "tag=$tag"
