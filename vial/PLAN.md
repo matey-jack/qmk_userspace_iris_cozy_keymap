@@ -228,7 +228,23 @@ Two options, my recommendation first:
 ### 3.4 RGB
 
 `VIALRGB_ENABLE` means effect, speed, hue/sat/val live in EEPROM and are set over the protocol
-(`vitaly rgb -e <n> -c '#rrggbb' -p`, where `-p` persists across restarts).
+(`vitaly rgb -e <n> -c '#rrggbb' -p`, where `-p` persists across restarts). The stock Vial
+firmware offers the 44 standard RGB matrix effects, and any of them can be chosen at runtime.
+
+**But `ENABLE_RGB_MATRIX_KEY_GROUPS` is not one of them.** That flag selects a colour mode that
+exists only in your own QMK fork — which is why I could not find it in QMK master or in
+`vial-qmk` — so *no* stock Vial build can offer it, at runtime or otherwise. This is the one
+place where "stock firmware" and the current `cozy`/`cozy_de` behaviour genuinely cannot both
+be had:
+
+- **Accept the standard effects.** Solid Color is the closest match to what the key-groups mode
+  was layered on top of, and it is one `vitaly rgb -e` away.
+- **Port the fork's colour mode into `vial-qmk`.** Technically fine — `vial-qmk` is a QMK fork
+  itself, so the animation drops in the same way — but it ends the "nothing to maintain" premise:
+  every `vial-qmk` update would need the patch reapplied.
+
+Worth deciding before the build in [step 1](#step-1-get-the-firmware), since it is the one thing
+that changes what you compile.
 
 ---
 
@@ -241,7 +257,7 @@ Two options, my recommendation first:
 | `MX_VERS` version + build date | gone, §3.3 |
 | `RGB_MATRIX_TIMEOUT`, `RGB_MATRIX_SLEEP`, the `#undef ENABLE_RGB_MATRIX_*` list | compile-time only; the stock Vial build has the full animation list and no idle timeout |
 | `CONSOLE_ENABLE` / `keyboard_post_init_user()` | Vial compiles with `-DNO_DEBUG`; the keymap has no custom code anyway |
-| `ENABLE_RGB_MATRIX_KEY_GROUPS` | **needs checking** — I could not find this define in either QMK master or vial-qmk. It may already be a no-op in our own build. |
+| `ENABLE_RGB_MATRIX_KEY_GROUPS` | **gone, and this one is a real loss** — it is a colour mode from your own QMK fork, so no stock Vial build can have it. See §3.4. |
 | a 5th layer | no headroom, §1 |
 
 ---
@@ -339,8 +355,9 @@ on. `vial-qmk` tracks QMK with a lag; its `quantum/keycodes.h` is from 2025 and 
 3. **Does `cozy_de` stay?** This plan does not touch the existing keymaps. If Vial becomes the
    daily driver, `cozy_de/keymap.c` turns into the reference the `.vil` is generated from —
    worth saying so in the README either way.
-4. **`ENABLE_RGB_MATRIX_KEY_GROUPS`** — what was this meant to do? I could not find it in QMK.
-   If it is already a no-op, one fewer thing to miss.
+4. **The key-groups colour mode** — answered in `793c361`: it lives in your QMK fork, so stock
+   Vial cannot have it. The open part is now which way to go, accept the standard effects or
+   carry the patch into `vial-qmk`. §3.4
 
 ---
 
