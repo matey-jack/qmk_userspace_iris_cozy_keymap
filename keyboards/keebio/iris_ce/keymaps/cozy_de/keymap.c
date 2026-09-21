@@ -34,7 +34,34 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
+// Written by `qmk generate-version-h` at the start of every build; QMK_BUILDDATE is the part used here.
+#include "version.h"
+
 #define VERSION_STRING "Cozy-DE, rev02"
+
+/*
+    The build date in ISO 8601 order, as in 2026-09-21.
+
+    `__DATE__` cannot give that. The C standard fixes its form as "Mmm dd yyyy" ("Sep 21 2026",
+    with a leading space instead of a zero on the days 1 to 9), and the preprocessor cannot
+    reorder the characters of a string literal, so no amount of macro work turns it into a date
+    that sorts. QMK's generated `version.h` already has one: QMK_BUILDDATE is
+    "YYYY-MM-DD-hh:mm:ss", whose first ten characters are exactly the date wanted here.
+
+    Copying those ten out by hand is what makes this a compile-time constant: the compiler folds
+    each subscript of the literal away, so nothing of the build time is computed on the keyboard.
+*/
+_Static_assert(sizeof(QMK_BUILDDATE) >= sizeof("YYYY-MM-DD"), "QMK_BUILDDATE is too short to hold a date");
+#define BUILD_DATE_CHAR(i) QMK_BUILDDATE[i]
+static const char BUILD_DATE[] = {
+    BUILD_DATE_CHAR(0), BUILD_DATE_CHAR(1), BUILD_DATE_CHAR(2), BUILD_DATE_CHAR(3), // YYYY
+    BUILD_DATE_CHAR(4),                                                             // -
+    BUILD_DATE_CHAR(5), BUILD_DATE_CHAR(6),                                         // MM
+    BUILD_DATE_CHAR(7),                                                             // -
+    BUILD_DATE_CHAR(8), BUILD_DATE_CHAR(9),                                         // DD
+    '\0'
+};
+#undef BUILD_DATE_CHAR
 
 /*
     Dead keys and characters that xkb's `de(e1)` puts on the AltGr (level 3) level
@@ -328,8 +355,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
                 send_string_with_delay(", ", SEND_STRING_DELAY_MS);
-                // TODO: how to print the date in ISO-format, like 2026-09-21?
-                send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
+                send_string_with_delay(BUILD_DATE, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\n", SEND_STRING_DELAY_MS);
             }
             return false;
@@ -341,7 +367,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void keyboard_post_init_user(void) {
     debug_enable=true;
     println(VERSION_STRING);
-    println(__DATE__);
+    println(BUILD_DATE);
     //debug_matrix=true;
     //debug_keyboard=true;
     //debug_mouse=true;
