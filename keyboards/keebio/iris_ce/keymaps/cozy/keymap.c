@@ -14,27 +14,11 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
-// Written by `qmk generate-version-h` at the start of every build; QMK_BUILDDATE is the part used here.
-#include "version.h"
+// Shared with the other keymap, through USER_NAME in rules.mk: the ISO build date
+// and the SEND_STRING delay.
+#include "cozy_common.h"
 
 #define VERSION_STRING "Layout ASDR_NILT standalone, rev22.3-combine-layer-cleanup"
-
-/*
-    The build date in ISO 8601 order, as in 2026-09-21. `__DATE__` cannot give that: the C standard
-    fixes its form as "Mmm dd yyyy" ("Sep 21 2026", day space-padded), and the preprocessor cannot
-    reorder a string literal. QMK's generated `version.h` has the date the right way round already,
-    as the first ten characters of QMK_BUILDDATE ("YYYY-MM-DD-hh:mm:ss"); copying them out by
-    subscript keeps the whole thing a compile-time constant. Same as in the `cozy_de` keymap.
-*/
-_Static_assert(sizeof(QMK_BUILDDATE) >= sizeof("YYYY-MM-DD"), "QMK_BUILDDATE is too short to hold a date");
-static const char BUILD_DATE[] = {
-    QMK_BUILDDATE[0], QMK_BUILDDATE[1], QMK_BUILDDATE[2], QMK_BUILDDATE[3], // YYYY
-    QMK_BUILDDATE[4],                                                       // -
-    QMK_BUILDDATE[5], QMK_BUILDDATE[6],                                     // MM
-    QMK_BUILDDATE[7],                                                       // -
-    QMK_BUILDDATE[8], QMK_BUILDDATE[9],                                     // DD
-    '\0'
-};
 
 enum layer_names {
     L_BASE,
@@ -202,9 +186,6 @@ const custom_shift_key_t custom_shift_keys[] = {
   {KC_DOT , KC_COLN}, // Shift . is :
   {KC_COMM, KC_SCLN}, // Shift , is ;
 };
-
-// 3 ms still had some dropped letters.
-const int SEND_STRING_DELAY_MS = 10;
 
 void toggle_quote_mode(void) {
     switch (current_quote_mode) {
