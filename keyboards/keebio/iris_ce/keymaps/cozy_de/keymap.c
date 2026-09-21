@@ -226,8 +226,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // other: § on the 3 key and µ on the M key — both the keys the standard German layout puts
     //        them on: <AE03> level 2 (Shift+3) and <AB07> level 3 (AltGr+M). This layer reaches
     //        both unmodified instead, which is the whole point of having them here.
-    //        § has nowhere else to go anyway, since Shift+3 types # through the ko_3_hash key
-    //        override, and taking the 3 key is what leaves 4…0 free for the accents above.
     [L_COMBINE] = LAYOUT(
             TO(0)  , KC_NO  , KC_NO  , DE_SECT, DE_DCED, DE_DSTR,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
             KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
