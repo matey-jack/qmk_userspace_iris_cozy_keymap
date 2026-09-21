@@ -201,7 +201,14 @@ space that turns a dead key into its spacing character.
 The key overrides restore the Cozy Shift mapping on top of the German layout.
 The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`, `Shift 5 → %`,
 `Shift , → ;`, `Shift . → :` and `Shift - → _`; the other eight pairings
-(`@ # ß & * + ?` on the number row and `"` on the apostrophe key) are made by a key override each.
+(`@ # ß & * + ?` on the number row and `"` on the apostrophe key) are made by a key override.
+
+Four of those eight — `&`, `*`, `?` and `"` — take two overrides rather than one, because their
+replacement is itself a shifted keycode. A single override covering both Shift keys would suppress
+whichever Shift was really held and re-add a *left* one, so pressing them with the right Shift
+swapped the modifier byte from RSFT to LSFT at the very moment the replacement key went down, and
+the host typed the unshifted character instead (issue #14). One override per Shift side keeps the
+modifier byte unchanged throughout, so there is no such swap.
 
 One more key override keeps the "chameleon" ä key working: plain and with Shift it types ä and Ä,
 while holding Ctrl, Alt or Win turns it into Tab, so `Ctrl+Tab`, `Alt+Tab` and `Win+Tab` stay the
