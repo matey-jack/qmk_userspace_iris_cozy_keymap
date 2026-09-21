@@ -14,7 +14,29 @@
 // for debugging only; needs the QMK Toolbox to receive. DOESN'T WORK YET!
 #include "print.h"
 
+// Written by `qmk generate-version-h` at the start of every build; QMK_BUILDDATE is the part used here.
+#include "version.h"
+
 #define VERSION_STRING "Layout ASDR_NILT standalone, rev22.2-winkey-fix"
+
+/*
+    The build date in ISO 8601 order, as in 2026-09-21. `__DATE__` cannot give that: the C standard
+    fixes its form as "Mmm dd yyyy" ("Sep 21 2026", day space-padded), and the preprocessor cannot
+    reorder a string literal. QMK's generated `version.h` has the date the right way round already,
+    as the first ten characters of QMK_BUILDDATE ("YYYY-MM-DD-hh:mm:ss"); copying them out by
+    subscript keeps the whole thing a compile-time constant. Same as in the `cozy_de` keymap.
+*/
+_Static_assert(sizeof(QMK_BUILDDATE) >= sizeof("YYYY-MM-DD"), "QMK_BUILDDATE is too short to hold a date");
+#define BUILD_DATE_CHAR(i) QMK_BUILDDATE[i]
+static const char BUILD_DATE[] = {
+    BUILD_DATE_CHAR(0), BUILD_DATE_CHAR(1), BUILD_DATE_CHAR(2), BUILD_DATE_CHAR(3), // YYYY
+    BUILD_DATE_CHAR(4),                                                             // -
+    BUILD_DATE_CHAR(5), BUILD_DATE_CHAR(6),                                         // MM
+    BUILD_DATE_CHAR(7),                                                             // -
+    BUILD_DATE_CHAR(8), BUILD_DATE_CHAR(9),                                         // DD
+    '\0'
+};
+#undef BUILD_DATE_CHAR
 
 enum layer_names {
     L_BASE,
@@ -248,7 +270,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MX_VERS:
             if (record->event.pressed) {
                 send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
-                send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
+                send_string_with_delay(", ", SEND_STRING_DELAY_MS);
+                send_string_with_delay(BUILD_DATE, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\nQuote mode: ", SEND_STRING_DELAY_MS);
                 send_string_with_delay(quote_mode_names[current_quote_mode], SEND_STRING_DELAY_MS);
                 send_string_with_delay("\n", SEND_STRING_DELAY_MS);
@@ -341,7 +364,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void keyboard_post_init_user(void) {
     debug_enable=true;
     println(VERSION_STRING);
-    println(__DATE__);
+    // Not println(): that macro pastes its argument onto "\r\n" at compile time, so it takes a
+    // string literal only, and BUILD_DATE is an array.
+    xprintf("%s\r\n", BUILD_DATE);
     //debug_matrix=true;
     //debug_keyboard=true;
     //debug_mouse=true;
