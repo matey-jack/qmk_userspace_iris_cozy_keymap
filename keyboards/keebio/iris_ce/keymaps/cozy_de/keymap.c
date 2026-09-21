@@ -321,6 +321,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case MX_VERS:
             if (record->event.pressed) {
                 send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
+                send_string_with_delay(", ", SEND_STRING_DELAY_MS);
+                // TODO: how to print the date in ISO-format, like 2026-09-21?
                 send_string_with_delay(__DATE__, SEND_STRING_DELAY_MS);
                 send_string_with_delay("\n", SEND_STRING_DELAY_MS);
             }
