@@ -189,13 +189,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_LCTL, L2_Y, KC_X, KC_C, KC_V, DE_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, DE_COMM, DE_DOT, L2_MINS, L3_ENT,
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
-    // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
-    // accented letters: äöü ß, and the five macros é è à ñ ç (minuscules only, see the enum above).
-    // combining accents: all seven that E1 offers — ^ ¨ ´ ` ~ on row 1 right (as in `cozy`),
-    //                    plus the cedilla and the stroke on row 1 left, where the ¼½¾¥ used to be.
+    // Extra letter layer, rarely used, since äöü are on the base layer and ß is on Shift+6.
+    // accented letters: ß once more (on the S key), and the five macros é è à ñ ç
+    //                   (minuscules only, see the enum above). äöü are not repeated here:
+    //                   an unshifted key of the base layer is never worth a second position.
+    // combining accents: all seven that E1 offers, side by side on the 4…0 keys of row 1 —
+    //                    the cedilla and the stroke on the left half, where the ¼½¾¥ used to be,
+    //                    and ^ ¨ ´ ` ~ on the right half (as in `cozy`).
     //                    Any accent-letter pair that has no macro is typed as accent + letter,
     //                    and that is also how the capitals É È À Ñ Ç are made.
-    // other: µ §.  (E1's Level-5 latch DE_LVL5 lives on L_ALTGR, opposite its L_COMB counterpart.)
+    // other: µ, and § on the 3 key, which is where the standard German layout has it (on Shift+3).
+    //        Here Shift+3 types # instead, through the ko_3_hash key override, so § needs a place
+    //        of its own — and taking the 3 key leaves the number row's 4…0 free for the accents above.
+    //        (E1's Level-5 latch DE_LVL5 lives on L_ALTGR, opposite its L_COMB counterpart.)
     // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
@@ -210,7 +216,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Its siblings ^ and ` are dead keys in the German layout, so MX_HAT and MX_BTIC add the space
     // that turns them into the live characters. ¢ and £ are macros too, see the enum above.
     // DE_LVL5 sits where `cozy` had ß, mirroring L_COMB on the other half: both are one-shot layers.
-    // ß itself is still on L_COMBINE twice, and on Shift+6 through the ko_6_ss key override.
+    // ß itself is on L_COMBINE once, on the S key, and on Shift+6 through the ko_6_ss key override.
     [L_ALTGR] = LAYOUT(
             KC_NO  , DE_IEXL, MX_CENT, MX_PND , DE_EURO, KC_NO  ,                       MX_HAT , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
             KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_LVL5, DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
