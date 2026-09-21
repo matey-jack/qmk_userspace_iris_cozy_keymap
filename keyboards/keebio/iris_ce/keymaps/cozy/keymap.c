@@ -18,7 +18,7 @@
 // and the SEND_STRING delay.
 #include "cozy_common.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone, rev22.3-combine-layer-cleanup"
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev22.4-shared-build-date"
 
 enum layer_names {
     L_BASE,
