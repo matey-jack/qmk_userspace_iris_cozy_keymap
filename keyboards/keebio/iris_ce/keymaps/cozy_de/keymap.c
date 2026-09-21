@@ -223,9 +223,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //                    and ^ ¨ ´ ` ~ on the right half (as in `cozy`).
     //                    Any accent-letter pair that has no macro is typed as accent + letter,
     //                    and that is also how the capitals É È À Ñ Ç are made.
-    // other: µ, and § on the 3 key, which is where the standard German layout has it (on Shift+3).
-    //        Here Shift+3 types # instead, through the ko_3_hash key override, so § needs a place
-    //        of its own — and taking the 3 key leaves the number row's 4…0 free for the accents above.
+    // other: § on the 3 key and µ on the M key — both the keys the standard German layout puts
+    //        them on: <AE03> level 2 (Shift+3) and <AB07> level 3 (AltGr+M). This layer reaches
+    //        both unmodified instead, which is the whole point of having them here.
+    //        § has nowhere else to go anyway, since Shift+3 types # through the ko_3_hash key
+    //        override, and taking the 3 key is what leaves 4…0 free for the accents above.
     //        (E1's Level-5 latch DE_LVL5 lives on L_ALTGR, opposite its L_COMB counterpart.)
     // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
