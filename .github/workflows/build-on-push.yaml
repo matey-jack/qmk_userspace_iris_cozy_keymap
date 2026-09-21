@@ -42,7 +42,7 @@ jobs:
       any_changed:        ${{ steps.read.outputs.any_changed }}
       any_release:        ${{ steps.read.outputs.any_release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The change detection below diffs against `main` or against the previous tip of
           # this branch, neither of which exists in the default depth-1 checkout.
@@ -254,7 +254,7 @@ jobs:
     name: 'Key override tests'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Check out QMK and the two submodules the test harness needs
         run: |
@@ -393,7 +393,7 @@ jobs:
       COZY_DE_CHANGED: ${{ needs.version.outputs.cozy_de_changed }}
       COZY_DE_RELEASE: ${{ needs.version.outputs.cozy_de_release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download the packaged cozy firmware
         uses: actions/download-artifact@v4
