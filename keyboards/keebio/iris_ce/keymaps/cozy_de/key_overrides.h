@@ -56,8 +56,8 @@
 // The Shift layer of the number row: US ANSI, except for 6, 9 and 0 (see the ReadMe).
 const key_override_t ko_2_at   = ko_make_basic(MOD_MASK_SHIFT, KC_2, DE_AT);   // @ instead of "
 const key_override_t ko_3_hash = ko_make_basic(MOD_MASK_SHIFT, KC_3, DE_HASH); // # instead of §
+
 const key_override_t ko_6_ss   = ko_make_basic(MOD_MASK_SHIFT, KC_6, DE_SS);   // ß instead of &
-                                                                               // (alternative position for the AltGr+Z mapping, same finger)
 ko_shifted_pair(ko_7_ampr, KC_7, DE_AMPR);                                     // & instead of /
 ko_shifted_pair(ko_8_astr, KC_8, DE_ASTR);                                     // * instead of (
 const key_override_t ko_9_plus = ko_make_basic(MOD_MASK_SHIFT, KC_9, DE_PLUS); // + instead of ) – () move to the "stack of parentheses" on L_ALTGR
