@@ -154,17 +154,22 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
             KC_LCTL, L2_Y, KC_X, KC_C, KC_V, MX_QUOT, KC_LGUI,    MC_WINT, KC_J  , KC_M, KC_COMM, KC_DOT, L2_MINS, L3_ENT,
                                     KC_LALT, L2_DEL , KC_SPC ,      KC_E , L2_INS, KC_RCTL
         ),
-    // Extra letter layer, rarely used, since äöü are on base layer and ß is on AltGr.
-    // accented letters: äöü ß àèé çñ æ œ.
-    // combining accents: á à ã â ä
-    // other: µ ¼½¾.
+    // Extra letter layer, rarely used, since äöü are on the base layer
+    // and ß is on both the AltGr layer and Shift+6.
+    // accented letters: ß, then é ñ ç ø æ œ as single US ext. intl. keycodes
+    //                   and à è as macros (see the enum above). äöü are not repeated
+    //                   here: an unshifted key of the base layer is never worth a second position.
+    // combining accents: all five that US ext. intl. offers — ^ ¨ ´ ` ~ — side by side on the 6…0 keys.
+    //                    Any accent-letter pair that has no key of its own is typed as accent + letter,
+    //                    and that is also how the capitals É È À Ñ Ç are made.
+    // other: µ, and ¼ ½ ¾ ¥ § on the 1…5 keys (the fractions in order, on 1 2 3).
     // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
     // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
             TO(0)  , US_QRTR, US_HALF, US_TQTR, US_YEN , US_SECT,                     MX_CIRC, MX_DIA , MX_ACUT, MX_GRV , MX_CTIL, TO(0)  ,
-            KC_NO  , US_AE  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     US_SS  , KC_NO  , US_UDIA, US_ODIA, KC_NO  , KC_NO  ,
-            KC_NO  , US_ADIA, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
-            KC_NO  , MX_AGRV, KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
+            KC_NO  , US_AE  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
+            KC_NO  , MX_AGRV, US_SS  , KC_NO  , KC_NO  , KC_NO  ,                     KC_NO  , US_NTIL, KC_NO  , UC_oe  , US_OSTR, KC_NO  ,
+            KC_NO  , KC_NO  , KC_NO  , US_CCED, KC_NO  , KC_NO  , KC_NO  ,   KC_NO  , KC_NO  , US_MICR, KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
                                                 KC_NO  , KC_NO  , KC_NO  ,   US_EACU, MX_EGRV, KC_NO
         ),
     // Alternate character and navigation layer.
