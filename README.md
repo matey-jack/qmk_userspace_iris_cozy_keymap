@@ -144,7 +144,7 @@ Details of how well everything is production tested:
   I actually got a programmable keyboard partly because the software implementation of the nav layer was unreliable.
   Now with Firmware it's better indeed... but I miss having actual additional arrow keys. :-/
 * AltGr characters: the important ones are stable for more than ten years, while some unimportant characters keep shifting around when something else changes. 
-* The accent layer: Umlauts äöü and ß are unlikely to change, while everything else still needs production usage to evaluate its effectiveness.
+* The accent layer: still needs production usage to evaluate its effectiveness.
 * The Letter mapping (just FYI, since probably few people come for that): I've been using this for more than ten years, and after recently trying to improve it without finding any worthwhile improvements, I will probably use it until the end of my life.
 
 # The `cozy_de` variant: standard German OS layout, no custom code
