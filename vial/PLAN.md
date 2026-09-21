@@ -1,6 +1,7 @@
 # Plan: running `cozy_de` on stock Vial firmware
 
-**Status:** files written, not yet tried on hardware. Written 2026-09-19.
+**Status:** files written, not yet tried on hardware. Written 2026-09-19, and re-synced with
+`main` on 2026-09-21 — see [§8](#8-re-sync-with-main).
 The decisions this plan asked for have been made — see [§7](#7-decisions). What is left is
 flashing the firmware and the test pass in [§6](#6-order-of-work).
 
@@ -8,7 +9,7 @@ flashing the firmware and the test pass in [§6](#6-order-of-work).
 `cozy_de` keymap from a `.vil` file plus a small script that sets the things a `.vil` does not
 carry. No custom `keymap.c` to maintain, no per-change recompile.
 
-**Verdict: feasible.** Every keycode, all four layers and all nine key overrides of `cozy_de`
+**Verdict: feasible.** Every keycode, all four layers and all thirteen key overrides of `cozy_de`
 can be expressed in a `.vil` file, and the two `config.h` settings that matter at typing time
 (`TAPPING_TERM`, `PERMISSIVE_HOLD`) are runtime-settable over the Vial protocol. Four things do
 not survive the move; they are listed under [What is lost](#4-what-is-lost) and none of them is
@@ -62,7 +63,7 @@ OPT_DEFS += -DVIAL_ENABLE -DNO_DEBUG -DSERIAL_NUMBER=\"vial:f64c2b3c\" -DCAPS_WO
 <https://github.com/vial-kb/vial-qmk/blob/vial/builddefs/build_vial.mk>
 
 So **key overrides are on by default** — that was the single biggest risk, since the Cozy Shift
-mapping of the number row is nine key overrides. Slot counts are derived from EEPROM size; on a
+mapping of the number row is thirteen key overrides. Slot counts are derived from EEPROM size; on a
 board with room (the Iris CE is RP2040 with flash-backed EEPROM) that is 32 key-override slots,
 32 combos and 32 tap dances.
 <https://github.com/vial-kb/vial-qmk/blob/vial/quantum/vial.h>
@@ -72,7 +73,7 @@ Sizes that have to fit:
 | Resource | Stock Vial default | `cozy_de` needs | Fits |
 | --- | --- | --- | --- |
 | Layers (`DYNAMIC_KEYMAP_LAYER_COUNT`) | 4 | 4 | exactly |
-| Key override slots | 32 | 9 | yes |
+| Key override slots | 32 | 13 | yes |
 | Macro slots | 16 | 9 | yes |
 | Combo slots | 32 | 1 (see §3) | yes |
 
@@ -116,7 +117,7 @@ number row, all the navigation and media keys — is in the table under its own 
 
 ### 2.2 Key overrides
 
-Vial's `vial_key_override_entry_t` has exactly the fields our nine overrides use: trigger,
+Vial's `vial_key_override_entry_t` has exactly the fields our thirteen overrides use: trigger,
 replacement, layer bitmask, trigger mods, negative mod mask, suppressed mods, and an options
 byte. In the `.vil` the two keycodes are strings and the rest are integers.
 <https://github.com/vial-kb/vial-gui/blob/main/src/main/python/protocol/key_override.py>
@@ -132,8 +133,33 @@ which gives:
 
 | Override | trigger | replacement | trigger_mods | suppressed_mods | options |
 | --- | --- | --- | --- | --- | --- |
-| the eight `ko_make_basic` ones | e.g. `KC_2` | e.g. `ALGR(KC_Q)` | `0x22` (both shifts) | `0x22` | `0x87` |
+| the four plain `ko_make_basic` ones | e.g. `KC_2` | e.g. `ALGR(KC_Q)` | `0x22` (both shifts) | `0x22` | `0x87` |
+| each `ko_shifted_pair()` left half | e.g. `KC_7` | e.g. `LSFT(KC_6)` | `0x02` (left shift) | `0x02` | `0x87` |
+| each `ko_shifted_pair()` right half | e.g. `KC_7` | e.g. `RSFT(KC_6)` | `0x20` (right shift) | `0x20` | `0x87` |
 | `ko_adia_tab` (the ä/Tab chameleon) | `KC_QUOT` | `KC_TAB` | `0xDD` (Ctrl/Alt/Gui, both sides) | `0x00` | `0x8F` |
+
+Four of the overrides are two entries rather than one, and that is not cosmetic — it is
+[issue #14](https://github.com/matey-jack/qmk_userspace_iris_cozy_keymap/issues/14), which
+applies here in full. Whenever the replacement is itself a shifted keycode (`DE_DQUO` is
+`S(DE_2)`, `DE_AMPR` is `S(DE_6)`, `DE_ASTR` is `S(DE_PLUS)`, `DE_QUES` is `S(DE_SS)`), a single
+`MOD_MASK_SHIFT` override suppresses the Shift that was really held and re-adds a *left* one.
+Held with the **right** Shift that is a side swap, and the host can resolve the replacement
+keycode before the modifier delta and type the unshifted character instead: `2` for `"`, `6` for
+`&`, `+` for `*`, `ß` for `?`.
+
+`vial-qmk` is on the near side of the fix. QMK master now sends the modifier change in its own
+report before adding the replacement key; `vial-qmk`'s copy of `process_key_override.c` still
+calls `add_key()` with no report in between, so mods and key go out together and the race is
+live. Compare the `register_replacement` block in
+<https://github.com/qmk/qmk_firmware/blob/master/quantum/process_keycode/process_key_override.c>
+with <https://github.com/vial-kb/vial-qmk/blob/vial/quantum/process_keycode/process_key_override.c>.
+
+The fix is pure data, so it transfers: one entry per Shift side, each rebuilding the replacement
+on the side that was really pressed (`ko_shifted_pair()` in
+[`key_overrides.h`](../keyboards/keebio/iris_ce/keymaps/cozy_de/key_overrides.h)). The modifier
+byte is then identical before and after, so there is no delta to race with. `RSFT` is in Vial's
+keycode-expression table next to `LSFT` and `RALT`, so `"RSFT(KC_6)"` parses like any other
+string here (<https://github.com/vial-kb/vial-gui/blob/main/src/main/python/any_keycode.py>).
 
 `0x8F` is `0x87` plus bit 3, `one_mod` — which is exactly what the comment in `keymap.c` asks
 for: any one of Ctrl, Alt or Gui suffices, and nothing is suppressed so the held modifier stays
@@ -271,7 +297,7 @@ to fix an effect and colour if you want them reproducible.
 Both are now in this folder, alongside a [`README.md`](README.md) covering day-to-day use:
 
 - **[`cozy_de.vil`](cozy_de.vil)** — 4 layers × 10 rows × 6 cols of keycode strings, plus the
-  nine macros, the nine key overrides and the Caps Word combo.
+  nine macros, the thirteen key overrides and the Caps Word combo.
 - **[`seed-cozy-de.sh`](seed-cozy-de.sh)** — unlock, load the `.vil`, then set what the `.vil`
   does not carry.
 
@@ -371,10 +397,42 @@ on. `vial-qmk` tracks QMK with a lag; its `quantum/keycodes.h` is from 2025 and 
 3. **`cozy_de` is the basis.** The `.vil` was generated from `cozy_de/keymap.c`, and from here
    on the `.vil` is the one that gets edited — in the Vial GUI, saved back over the file. The
    two will drift, and that is fine: the C keymap is the fallback for if Vial does not work out,
-   not a source that keeps being re-converted.
+   not a source that keeps being re-converted. Drift is not the same as ignoring the C keymap,
+   though: changes that land on `main` before this branch merges are still worth carrying over
+   by hand, which is what §8 is.
 4. **The key-groups colour mode** — let it go, and use the standard RGB effects. Carrying the
    fork's patch into `vial-qmk` was the alternative; it would have ended the "nothing to
    maintain" premise that makes this whole exercise worth it. §3.4
+
+---
+
+## 8. Re-sync with `main`
+
+The `.vil` was generated from `cozy_de/keymap.c` as it stood at `2915db2`. `main` has moved
+since, and this branch is rebased on it; two of those changes are ones the `.vil` has to carry.
+Both were applied by hand, cell by cell; nothing was regenerated.
+
+**The L_COMBINE cleanup** (`2fdc6ac`, `015a997`, `af12141`) rearranged the layer:
+
+| | Before | Now |
+| --- | --- | --- |
+| ä ö ü | the A, O and U keys, as well as the base layer | gone — an unshifted base-layer key is not worth a second position |
+| ß | the S key and the Z key | the S key only |
+| § | the 5 key | the 3 key, where the standard German layout has it too (Shift+3) |
+| the cedilla and the dead stroke | the 3 and 4 keys | the 4 and 5 keys, so the seven accents sit side by side on 4…0 |
+| à | the Y key | the A key, freed by ä |
+
+Eight cells of layer 1 changed; no other layer changed a single cell, so the rest of the file is
+still in sync with `cozy_de/keymap.c`.
+
+**The issue #14 fix** (`96709de`, `d5dfd09`) split four key overrides into per-Shift-side pairs,
+taking the count from 9 to 13. The reasoning is in [§2.2](#22-key-overrides); the short version
+is that `vial-qmk` has the pre-fix `process_key_override.c`, so stock Vial reproduces the bug
+exactly as the compiled firmware did, and the fix is data-only so it transfers unchanged.
+
+Not carried over, because they do not touch the `.vil`: the shared `users/cozy_common` build-date
+header and the `MX_VERS` version bumps (`MX_VERS` is dropped here, §3.3), the host-side key-override
+test in `tests/`, the CI action bumps, and the `cozy`-keymap and ReadMe edits.
 
 ---
 

@@ -6,13 +6,15 @@ Three files that put the `cozy_de` keymap on an Iris CE running an unmodified
 | File | What it is |
 | --- | --- |
 | [`PLAN.md`](PLAN.md) | why this works, what changes, and every claim sourced |
-| `cozy_de.vil` | the keymap itself: 4 layers, 9 macros, 9 key overrides, 1 combo |
+| `cozy_de.vil` | the keymap itself: 4 layers, 9 macros, 13 key overrides, 1 combo |
 | `seed-cozy-de.sh` | loads the `.vil` and sets what it does not carry |
 
 `cozy_de.vil` was generated from
 [`keymaps/cozy_de/keymap.c`](../keyboards/keebio/iris_ce/keymaps/cozy_de/keymap.c) and is the
 thing to edit from here on — in the Vial GUI, then *File → Save current layout* back over this
 file. It is not regenerated from the C keymap, so the two drift apart once you change either.
+As of the L_COMBINE cleanup and the issue #14 fix on `main`, they are in sync; §8 of `PLAN.md`
+records what was carried over.
 
 ## Using it
 

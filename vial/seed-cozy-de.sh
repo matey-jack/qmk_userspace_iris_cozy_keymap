@@ -2,7 +2,7 @@
 #
 # Seed a stock-Vial Iris CE with the cozy_de keymap.
 #
-# `cozy_de.vil` carries the layers, the nine macros, the nine key overrides and the Caps Word
+# `cozy_de.vil` carries the layers, the nine macros, the thirteen key overrides and the Caps Word
 # combo. It also carries a `settings` block, but vitaly's `load` does not apply it — only the
 # Vial GUI does — so the two tap-hold settings are set explicitly further down. Running this
 # after a GUI restore is harmless: every step is idempotent.
