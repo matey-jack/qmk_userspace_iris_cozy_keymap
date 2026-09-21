@@ -367,7 +367,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void keyboard_post_init_user(void) {
     debug_enable=true;
     println(VERSION_STRING);
-    println(BUILD_DATE);
+    // Not println(): that macro pastes its argument onto "\r\n" at compile time, so it takes a
+    // string literal only, and BUILD_DATE is an array.
+    xprintf("%s\r\n", BUILD_DATE);
     //debug_matrix=true;
     //debug_keyboard=true;
     //debug_mouse=true;
