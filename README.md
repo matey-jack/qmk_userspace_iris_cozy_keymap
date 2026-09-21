@@ -158,8 +158,8 @@ the same four layers and the same QMK keycodes as `cozy`, but with two differenc
    AltGr characters below actually depend on it.
  - It contains **no community modules and almost no custom code**.
    The `getreuer/custom_shift_keys` module is replaced by [QMK's built-in Key Overrides](https://docs.qmk.fm/features/key_overrides),
-   and `process_record_user()` is down to two things: typing the firmware version,
-   and the five accented letters described below.
+   and `process_record_user()` only prints the firmware version and replays the two-keystroke
+   sequences of the `custom_keycodes` enum in `cozy_de/keymap.c`.
 
 Because the German layout already has ä, ö, ü and ß as normal keys, one workaround of `cozy`
 is not needed here: the ANSI/Windows "quote mode" switch is gone, since the OS layout now decides
@@ -169,10 +169,11 @@ of `de(e1)` and are mapped to `KC_NO`; the head of `cozy_de/keymap.c` lists all 
 ## Accented letters
 
 E1 is what makes this keymap's combining-accent layer complete. On top of the acute, grave and
-circumflex that the standard German layout already has, E1 adds a **dead tilde** (AltGr+i) and a
-**dead cedilla** (AltGr+j), and moves the **dead diaeresis** to AltGr+z; a **dead stroke**
-(AltGr+ä) for ø, đ and ł comes along too. All seven sit on row 1 of the `L_COMBINE` layer,
-so any accent-letter pair can be composed by typing the accent and then the letter.
+circumflex that the standard German layout already has, it adds a **dead tilde**, a **dead
+cedilla** and a **dead stroke**, and moves the **dead diaeresis**. All seven sit on row 1 of the
+`L_COMBINE` layer, so any accent-letter pair can be composed by typing the accent and then the
+letter. The `#define` block at the head of `cozy_de/keymap.c` names each one's xkb key and level,
+so they can be checked against `reference/xkb/symbols/de` without a Linux box at hand.
 
 The five most frequent pairs also have a **one-key macro** on that layer: é, è, à, ñ and ç.
 These are minuscules only — the capitals É È À Ñ Ç are rare enough to be worth the two keystrokes,
@@ -181,14 +182,13 @@ modifiers before sending their dead key, because in the German layout a held Shi
 ´ into ` (silently making è out of é), and would push the AltGr dead keys onto E1's unassigned
 AltGr+Shift level, where they produce nothing at all.
 
-¼ ½ ¾ ‰ æ œ ø are not single keys on E1: it keeps them on level 5, behind an `ISO_Level5_Latch`.
-That latch is on the `L_ALTGR` layer as `DE_LVL5`, in the position that mirrors the `L_COMB`
-one-shot layer key on the other half of the board — the two are the same idea, one implemented in
-the firmware and one in the xkb config. Like a dead key it applies to the next keystroke, so
-`DE_LVL5` then `1` gives ¼, `DE_LVL5` then `ä` gives æ, and so on; the comment block at the head of
-`cozy_de/keymap.c` lists each one. This is the only part of the keymap expected to be
-**Linux-only**, since the Windows E1 implementation is not known to have a Level-5 latch.
-(ø also has a Windows-safe route: the dead stroke followed by `o`.)
+A handful of `cozy`'s characters are not single keys on E1: it keeps them on level 5, behind an
+`ISO_Level5_Latch`. That latch is on the `L_ALTGR` layer as `DE_LVL5`, in the position that
+mirrors the `L_COMB` one-shot layer key on the other half of the board — the two are the same
+idea, one implemented in the firmware and one in the xkb config. Like a dead key it applies to
+the next keystroke. This is the only part of the keymap expected to be **Linux-only**, since the
+Windows E1 implementation is not known to have a Level-5 latch. Which characters these are, and
+what to type for each, is in the comment block at the head of `cozy_de/keymap.c`.
 
 The two currency signs ¢ and £ get their own macros instead, in the `L_ALTGR` positions `cozy`
 uses. £ needs one: its second keystroke is the ´ key, which is not on the base layer, so typing
@@ -203,12 +203,10 @@ The German layout natively agrees with Cozy on `Shift 1 → !`, `Shift 4 → $`,
 `Shift , → ;`, `Shift . → :` and `Shift - → _`; the other eight pairings
 (`@ # ß & * + ?` on the number row and `"` on the apostrophe key) are made by a key override.
 
-Four of those eight — `&`, `*`, `?` and `"` — take two overrides rather than one, because their
-replacement is itself a shifted keycode. A single override covering both Shift keys would suppress
-whichever Shift was really held and re-add a *left* one, so pressing them with the right Shift
-swapped the modifier byte from RSFT to LSFT at the very moment the replacement key went down, and
-the host typed the unshifted character instead (issue #14). One override per Shift side keeps the
-modifier byte unchanged throughout, so there is no such swap.
+Four of those eight — `&`, `*`, `?` and `"` — take two overrides rather than one, one per Shift
+side, because their replacement is itself a shifted keycode. That was issue #14, and the comment
+in `cozy_de/key_overrides.h` walks through the modifier-byte race it caused. The host-side test
+in `tests/cozy_de_key_overrides/` compiles that same header, so the two cannot drift apart.
 
 One more key override keeps the "chameleon" ä key working: plain and with Shift it types ä and Ä,
 while holding Ctrl, Alt or Win turns it into Tab, so `Ctrl+Tab`, `Alt+Tab` and `Win+Tab` stay the
