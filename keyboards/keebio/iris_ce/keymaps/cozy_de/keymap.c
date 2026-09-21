@@ -52,16 +52,14 @@
     each subscript of the literal away, so nothing of the build time is computed on the keyboard.
 */
 _Static_assert(sizeof(QMK_BUILDDATE) >= sizeof("YYYY-MM-DD"), "QMK_BUILDDATE is too short to hold a date");
-#define BUILD_DATE_CHAR(i) QMK_BUILDDATE[i]
 static const char BUILD_DATE[] = {
-    BUILD_DATE_CHAR(0), BUILD_DATE_CHAR(1), BUILD_DATE_CHAR(2), BUILD_DATE_CHAR(3), // YYYY
-    BUILD_DATE_CHAR(4),                                                             // -
-    BUILD_DATE_CHAR(5), BUILD_DATE_CHAR(6),                                         // MM
-    BUILD_DATE_CHAR(7),                                                             // -
-    BUILD_DATE_CHAR(8), BUILD_DATE_CHAR(9),                                         // DD
+    QMK_BUILDDATE[0], QMK_BUILDDATE[1], QMK_BUILDDATE[2], QMK_BUILDDATE[3], // YYYY
+    QMK_BUILDDATE[4],                                                       // -
+    QMK_BUILDDATE[5], QMK_BUILDDATE[6],                                     // MM
+    QMK_BUILDDATE[7],                                                       // -
+    QMK_BUILDDATE[8], QMK_BUILDDATE[9],                                     // DD
     '\0'
 };
-#undef BUILD_DATE_CHAR
 
 /*
     Dead keys and characters that xkb's `de(e1)` puts on the AltGr (level 3) level
