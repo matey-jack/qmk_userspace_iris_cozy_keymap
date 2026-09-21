@@ -38,7 +38,7 @@
 // and the SEND_STRING delay.
 #include "cozy_common.h"
 
-#define VERSION_STRING "Cozy-DE, rev03-combine-layer-cleanup"
+#define VERSION_STRING "Cozy-DE, rev03.1-shared-build-date"
 
 /*
     Dead keys and characters that xkb's `de(e1)` puts on the AltGr (level 3) level
