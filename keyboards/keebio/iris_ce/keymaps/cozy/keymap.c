@@ -17,7 +17,7 @@
 // Written by `qmk generate-version-h` at the start of every build; QMK_BUILDDATE is the part used here.
 #include "version.h"
 
-#define VERSION_STRING "Layout ASDR_NILT standalone, rev22.2-winkey-fix"
+#define VERSION_STRING "Layout ASDR_NILT standalone, rev22.3-iso-build-date"
 
 /*
     The build date in ISO 8601 order, as in 2026-09-21. `__DATE__` cannot give that: the C standard
