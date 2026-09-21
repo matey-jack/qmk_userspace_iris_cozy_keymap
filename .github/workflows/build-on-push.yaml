@@ -242,6 +242,45 @@ jobs:
               }
             }
 
+  # The key overrides are the one part of the keymap whose behavior is worth testing rather than
+  # eyeballing: issue #14 was invisible in the source and only showed up in the HID reports, and
+  # only when the *right* Shift was used. `tests/cozy_de_key_overrides/` drives QMK's real key
+  # override code on the host, so it needs neither hardware nor an ARM toolchain, and it compiles
+  # `cozy_de/key_overrides.h` itself rather than a copy that could drift.
+  #
+  # Runs on pull requests too, unlike `build`: it is a couple of minutes and it is the only check
+  # that would catch a regression here before the firmware is flashed.
+  key-override-tests:
+    name: 'Key override tests'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out QMK and the two submodules the test harness needs
+        run: |
+          set -euo pipefail
+          # Same ref the firmware is built against, so the tests exercise the code that ships.
+          git clone --depth 1 --branch master https://github.com/qmk/qmk_firmware.git qmk
+          git -C qmk submodule update --init --depth 1 lib/googletest lib/printf
+
+      - name: Install the QMK CLI
+        run: |
+          set -euo pipefail
+          # In a virtualenv with current build tooling: installed against the system Python, one
+          # of milc's dependencies fails to build a wheel.
+          python3 -m venv qmkvenv
+          ./qmkvenv/bin/pip install --quiet --upgrade pip setuptools wheel
+          ./qmkvenv/bin/pip install --quiet qmk
+
+      - name: Run the key override tests
+        run: |
+          set -euo pipefail
+          cp -r tests/cozy_de_key_overrides qmk/tests/
+          cp keyboards/keebio/iris_ce/keymaps/cozy_de/key_overrides.h qmk/tests/cozy_de_key_overrides/
+          export PATH="$PWD/qmkvenv/bin:$PATH"
+          # SKIP_GIT: the submodule check wants submodules this shallow clone deliberately lacks.
+          make -C qmk SKIP_GIT=yes test:cozy_de_key_overrides
+
   build:
     name: 'QMK Userspace Build'
     if: github.event_name != 'pull_request'
@@ -343,7 +382,7 @@ jobs:
   # skips this job entirely, which is how a comment-only change stays free.
   release:
     name: 'Tag and release'
-    needs: [version, package]
+    needs: [version, package, key-override-tests]
     if: github.ref == 'refs/heads/main' && needs.version.outputs.any_release == 'true'
     runs-on: ubuntu-latest
     env:
