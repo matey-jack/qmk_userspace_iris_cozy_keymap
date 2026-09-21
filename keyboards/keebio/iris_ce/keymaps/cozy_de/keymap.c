@@ -228,9 +228,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //        both unmodified instead, which is the whole point of having them here.
     //        § has nowhere else to go anyway, since Shift+3 types # through the ko_3_hash key
     //        override, and taking the 3 key is what leaves 4…0 free for the accents above.
-    //        (E1's Level-5 latch DE_LVL5 lives on L_ALTGR, opposite its L_COMB counterpart.)
-    // Caution here: Esc and Backspace leave the layer, but still get sent to the computer with their L0 keycode.
-    // Maybe QMK exits the one-shot layer when recognizing and layer-related keycode and then does the entire processing on the pre-OSL layer?
     [L_COMBINE] = LAYOUT(
             TO(0)  , KC_NO  , KC_NO  , DE_SECT, DE_DCED, DE_DSTR,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
             KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
