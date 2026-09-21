@@ -240,7 +240,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // Its siblings ^ and ` are dead keys in the German layout, so MX_HAT and MX_BTIC add the space
     // that turns them into the live characters. ¢ and £ are macros too, see the enum above.
     // DE_LVL5 sits where `cozy` had ß, mirroring L_COMB on the other half: both are one-shot layers.
-    // ß itself is on L_COMBINE once, on the S key, and on Shift+6 through the ko_6_ss key override.
     [L_ALTGR] = LAYOUT(
             KC_NO  , DE_IEXL, MX_CENT, MX_PND , DE_EURO, KC_NO  ,                       MX_HAT , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
             KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_LVL5, DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
