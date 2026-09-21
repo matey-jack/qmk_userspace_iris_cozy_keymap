@@ -37,7 +37,7 @@
 // Written by `qmk generate-version-h` at the start of every build; QMK_BUILDDATE is the part used here.
 #include "version.h"
 
-#define VERSION_STRING "Cozy-DE, rev02"
+#define VERSION_STRING "Cozy-DE, rev03"
 
 /*
     The build date in ISO 8601 order, as in 2026-09-21.
