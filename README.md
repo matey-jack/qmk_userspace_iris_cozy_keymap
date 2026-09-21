@@ -230,6 +230,17 @@ but I do need `qmk config user.overlay_dir=(where the user space is checked out)
 The Github Actions workflow compiles both keymaps on every push, to any branch.
 `cozy` and `cozy_de` are versioned, tagged and released the same way, but on separate ladders.
 
+## No merge commits
+
+**This repository takes no merge commits.** The history is linear and stays that way.
+
+ - Bring a branch up to date by rebasing it on `main`, never by merging `main` into it.
+ - Land a pull request by rebasing or squashing it, so what arrives on `main` is an ordinary
+   commit — or a row of them — and not a merge.
+
+That keeps every tag below pointing at a commit that carries exactly one version of each
+keymap, which is what makes "which commit is this firmware" a question with one answer.
+
 ## Versions and tags
 
 The workflow reads each keymap's version out of the `VERSION_STRING` in its own `keymap.c`.
@@ -266,7 +277,7 @@ not always match the `VERSION_STRING` of the commit they point at.
 ## What a push to `main` does
 
 For every keymap that changed **and** carries a version that was never tagged, a tag is created
-on the merge commit — so a push that bumped both gets two tags. There is one Release, on the
+on the commit that landed — so a push that bumped both gets two tags. There is one Release, on the
 first of those tags (`cozy` before `cozy_de`), naming both firmware versions in its body.
 
 Both `.uf2` files are attached whether or not both were tagged, so a release is always a
