@@ -203,8 +203,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     //                    Any accent-letter pair that has no macro is typed as accent + letter,
     //                    and that is also how the capitals É È À Ñ Ç are made.
     // other: § on the 3 key and µ on the M key — both the keys the standard German layout puts
-    //        them on: <AE03> level 2 (Shift+3) and <AB07> level 3 (AltGr+M). This layer reaches
-    //        both unmodified instead, which is the whole point of having them here.
+    //        them on: <AE03> level 2 (Shift+3) and <AB07> level 3 (AltGr+M), reached unmodified here.
     [L_COMBINE] = LAYOUT(
             TO(0)  , KC_NO  , KC_NO  , DE_SECT, DE_DCED, DE_DSTR,                     DE_CIRC, DE_DDIA, DE_ACUT, DE_GRV , DE_DTIL, TO(0)  ,
             KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , TO(0)  ,                     KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  , KC_NO  ,
@@ -216,7 +215,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     // DE_TILD here is the 'live' (non-combining) tilde, as used in programming languages, among others.
     // Its siblings ^ and ` are dead keys in the German layout, so MX_HAT and MX_BTIC add the space
     // that turns them into the live characters. ¢ and £ are macros too, see the enum above.
-    // DE_LVL5 sits where `cozy` had ß, mirroring L_COMB on the other half: both are one-shot layers.
     [L_ALTGR] = LAYOUT(
             KC_NO  , DE_IEXL, MX_CENT, MX_PND , DE_EURO, KC_NO  ,                       MX_HAT , DE_PIPE, DE_LBRC, DE_RBRC, DE_IQUE, KC_DEL ,
             KC_TAB ,S(KC_TAB),KC_PRWD, KC_UP  , KC_NXWD, L_COMB ,                       DE_LVL5, DE_BSLS, DE_LCBR, DE_RCBR, DE_TILD, DE_DEG ,
