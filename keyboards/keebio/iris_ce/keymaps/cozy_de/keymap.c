@@ -7,7 +7,8 @@
     (xkb's `de(e1)`, standardized as DIN 2137-1:2020-11), and it deliberately contains
      - no community modules (the `getreuer/custom_shift_keys` module is replaced by QMK's built-in Key Overrides), and
      - no `process_record_user()` logic beyond what the accented letters actually need:
-       printing the firmware version, and the five accent macros at the end of this file.
+       printing the firmware version, the five accent macros at the end of this file, and the
+       Win/Win+Tab mod-tap key ported from `cozy`.
 
     E1 is identical to the standard German layout `de(basic)` on levels 1 and 2 (plain and Shift),
     so every unmodified and every shifted key of this keymap types the same on both layouts.
@@ -166,9 +167,10 @@ enum custom_keycodes {
 /*
     Various convenience keycodes.
 */
-// The expose / task view key for Windows: a plain Win+Tab, no hold function.
+// Mod/Tap for Win and Win+Tab. Need custom code below, because the MT macro doesn't support modifier bits in the second arg.
+// This triggers expose / task view in Windows and behaves like a Windows key when held.
 // The Gui modifier itself stays on the left thumb key (for the start menu in Windows and Expose in Ubuntu).
-#define MC_WINT  G(KC_TAB)
+#define MC_WINT  MT(MOD_RGUI, KC_TAB)
 
 // previous and next word cursor navigation
 // (This helps avoid pressing Ctrl modifier in addition to the layer toggle.)
@@ -319,6 +321,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
     switch (keycode) {
+        case MC_WINT:
+            // only handle the press event in "tap" mode. (Hold mode is fully handled by QMK.)
+            if (record->tap.count && record->event.pressed) {
+                tap_code16(RWIN(KC_TAB));
+                return false;
+            }
+            break;
+
         case MX_VERS:
             if (record->event.pressed) {
                 send_string_with_delay(VERSION_STRING, SEND_STRING_DELAY_MS);
