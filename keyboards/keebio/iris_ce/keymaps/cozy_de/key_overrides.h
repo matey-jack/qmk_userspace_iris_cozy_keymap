@@ -57,11 +57,11 @@
 const key_override_t ko_2_at   = ko_make_basic(MOD_MASK_SHIFT, KC_2, DE_AT);   // @ instead of "
 const key_override_t ko_3_hash = ko_make_basic(MOD_MASK_SHIFT, KC_3, DE_HASH); // # instead of §
 
-const key_override_t ko_6_ss   = ko_make_basic(MOD_MASK_SHIFT, KC_6, DE_SS);   // ß instead of &
+const key_override_t ko_6_plus = ko_make_basic(MOD_MASK_SHIFT, KC_6, DE_PLUS); // + instead of &
 ko_shifted_pair(ko_7_ampr, KC_7, DE_AMPR);                                     // & instead of /
 ko_shifted_pair(ko_8_astr, KC_8, DE_ASTR);                                     // * instead of (
-const key_override_t ko_9_plus = ko_make_basic(MOD_MASK_SHIFT, KC_9, DE_PLUS); // + instead of ) – () move to the "stack of parentheses" on L_ALTGR
-ko_shifted_pair(ko_0_ques, KC_0, DE_QUES);                                     // ? instead of =  – = is next to < and > on L_ALTGR
+const key_override_t ko_9_ss   = ko_make_basic(MOD_MASK_SHIFT, KC_9, DE_SS);   // ß instead of )
+ko_shifted_pair(ko_0_ques, KC_0, DE_QUES);                                     // ? instead of = 
 
 // The apostrophe / quote key uses the US ANSI pairing. In the German layout both characters sit on
 // other keys (' is Shift+#, " is Shift+2), so the Shift pairing has to be made here.
@@ -96,12 +96,12 @@ const key_override_t ko_adia_tab = {
 const key_override_t *key_overrides[] = {
     &ko_2_at,
     &ko_3_hash,
-    &ko_6_ss,
+    &ko_6_plus,
     &ko_7_ampr_l,
     &ko_7_ampr_r,
     &ko_8_astr_l,
     &ko_8_astr_r,
-    &ko_9_plus,
+    &ko_9_ss,
     &ko_0_ques_l,
     &ko_0_ques_r,
     &ko_quot_dquo_l,
